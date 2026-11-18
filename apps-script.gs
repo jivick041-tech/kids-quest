@@ -1,6 +1,6 @@
 /**
  * 竹林小隊練功坊：雲端紀錄（Google 試算表）
- * 工作表「小勇士」「對決」「對決結果」「動態」會在第一次寫入時自動建立。
+ * 工作表「小勇士」「對決」「對決結果」「動態」「頭貼」會在第一次寫入時自動建立。
  *
  * 安裝：建立新的 Google 試算表 → 擴充功能 → Apps Script → 整段貼上取代、存檔
  *       → 部署 → 新增部署作業 → 類型選「網頁應用程式」
@@ -13,8 +13,10 @@ const SHEETS = {
   player:    { name: '小勇士',   headers: ['ID', '名字', '等級', '經驗值', '星星', '連續天數', '最後練習', '更新時間', '資料'], dataCol: 9 },
   challenge: { name: '對決',     headers: ['ID', '發起人', '對象', '項目', '建立時間', '更新時間', '資料'], dataCol: 7 },
   result:    { name: '對決結果', headers: ['ID', '對決ID', '玩家', '成績', '更新時間', '資料'], dataCol: 6 },
-  feed:      { name: '動態',     headers: ['ID', '玩家', '內容', '時間', '資料'], dataCol: 5 }
+  feed:      { name: '動態',     headers: ['ID', '玩家', '內容', '時間', '資料'], dataCol: 5 },
+  avatar:    { name: '頭貼',     headers: ['ID', '名字', '更新時間', '資料'], dataCol: 4 }
 };
+function okImg_(s) { return s === '' || (typeof s === 'string' && s.length < 45000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(s)); }
 
 function out_(s) { return ContentService.createTextOutput(s); }
 function sheet_(k) {
@@ -43,7 +45,17 @@ function doPost(e) {
     if (String(d.code) !== FAMILY_CODE) return out_('bad code');
     const kind = d.kind, id = String(d.id || ''), data = d.data || {};
     if (!okId_(id)) return out_('bad id');
-    if (kind === 'delplayer') { const sh = sheet_('player'), r = findRow_(sh, id); if (r) sh.deleteRow(r); return out_('ok'); }
+    if (kind === 'delplayer') {
+      ['player', 'avatar'].forEach(k => { const sh = sheet_(k), r = findRow_(sh, id); if (r) sh.deleteRow(r); });
+      return out_('ok');
+    }
+    if (kind === 'avatar') {                       // 頭貼：每個角色一列，可以覆蓋
+      if (!okImg_(data.img)) return out_('bad img');
+      const sh = sheet_('avatar'), r = findRow_(sh, id);
+      const row = [id, clean_(nameOf_(id)), new Date(), JSON.stringify({ id: id, v: Number(data.v) || 0, img: data.img })];
+      if (r) sh.getRange(r, 1, 1, row.length).setValues([row]); else sh.appendRow(row);
+      return out_('ok');
+    }
     if (!SHEETS[kind]) return out_('bad kind');
     const json = JSON.stringify(data);
     if (json.length > 45000) return out_('too big');
@@ -72,7 +84,11 @@ function doGet(e) {
   if (!/^[A-Za-z_$][\w$]{0,40}$/.test(cb)) return out_('竹林小隊練功坊紀錄服務運作中');
   let res;
   if (String(p.code) !== FAMILY_CODE) res = { error: 'code' };
-  else {
+  else if (p.action === 'avatars') {               // ?action=avatars&ids=a,b,c → 只回傳要的頭貼
+    const want = String(p.ids || '').split(',').filter(okId_), sh = sheet_('avatar'), n = sh.getLastRow();
+    const rows = n < 2 ? [] : sh.getRange(2, 1, n - 1, 4).getValues();
+    res = { avatars: rows.filter(r => want.indexOf(String(r[0])) >= 0).map(r => { try { return JSON.parse(r[3]); } catch (x) { return null; } }).filter(Boolean) };
+  } else {
     const read = (k, filter) => {
       const sh = sheet_(k), n = sh.getLastRow(); if (n < 2) return [];
       return sh.getRange(2, SHEETS[k].dataCol, n - 1, 1).getValues()

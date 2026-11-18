@@ -187,6 +187,20 @@ label.chip{cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .r-SSR .big-ic{filter:drop-shadow(0 0 16px #FACC15)}
 .rar{display:inline-block;color:#fff;border-radius:99px;padding:2px 14px;font-weight:800;margin:4px 0}
 .crown{font-size:18px}
+.face{width:44px;height:44px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 0 0 2px #FFD98A;display:inline-grid;place-items:center;background:#FFF0D1;font-size:26px;vertical-align:middle;flex:none;line-height:1}
+.face.sm{width:30px;height:30px;font-size:18px;border-width:2px}
+.face.lg{width:62px;height:62px;font-size:36px}
+.face.xl{width:92px;height:92px;font-size:54px}
+.node .ic .face{margin:0 auto}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;padding:6px 0 12px;border-bottom:1px dashed var(--line);margin-bottom:4px}
+.pod{flex:1;max-width:150px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pod .md{font-size:28px;line-height:1}
+.pod b{font-size:16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod small{font-weight:800;color:var(--ord)}
+.pod .step{width:100%;border-radius:12px 12px 0 0;background:linear-gradient(180deg,#FFE9B0,#FFD47A)}
+.pod.r1 .step{height:54px;background:linear-gradient(180deg,#FFE27A,#FFC23C)}.pod.r2 .step{height:36px;background:linear-gradient(180deg,#EEF1F6,#CBD3E0)}.pod.r3 .step{height:24px;background:linear-gradient(180deg,#F9DCC4,#E9B48A)}
+.pod.r1 .face{box-shadow:0 0 0 3px #FFC23C,0 0 18px rgba(255,194,60,.7)}
+.pod.me b{color:var(--ord)}
 </style>
 </head>
 <body>
@@ -591,7 +605,7 @@ function roll(tier){const w=RW[tier]||RW.n;let x=Math.random()*100,ri=0;while(ri
  const pool=TREASURES.filter(t=>t.r===rar);return {kind:'tre',id:pool[Math.floor(Math.random()*pool.length)].id,rar};}
 
 // ================= 玩家資料 =================
-function defPlayer(){return {id:'',name:'',pet:'cat',pin:'',xp:0,stars:{},stats:{},wrong:[],stickers:[],daily:{date:'',done:0,correct:0,math:0,eng:0,claimed:[]},streak:0,best:0,lastDay:'',days:0,arcadeBest:0,total:0,mute:false,items:{lamp:1,shield:1,hourglass:0,scroll:0},treasures:{},equip:'',chests:['n'],buff:{},chDone:{},rev:0,at:0};}
+function defPlayer(){return {id:'',name:'',pet:'cat',pin:'',xp:0,stars:{},stats:{},wrong:[],stickers:[],daily:{date:'',done:0,correct:0,math:0,eng:0,claimed:[]},streak:0,best:0,lastDay:'',days:0,arcadeBest:0,total:0,mute:false,items:{lamp:1,shield:1,hourglass:0,scroll:0},treasures:{},equip:'',chests:['n'],buff:{},chDone:{},av:0,rev:0,at:0};}
 function fixPlayer(p){const d=defPlayer();p=Object.assign(d,clone(p||{}));p.items=Object.assign({lamp:0,shield:0,hourglass:0,scroll:0},p.items||{});p.treasures=p.treasures||{};p.buff=p.buff||{};p.chDone=p.chDone||{};p.chests=Array.isArray(p.chests)?p.chests:[];p.wrong=(Array.isArray(p.wrong)?p.wrong:[]).filter(w=>w&&w.seed!=null&&NODE[w.node]);p.daily=Object.assign({date:'',done:0,correct:0,math:0,eng:0,claimed:[]},p.daily||{});if(!Array.isArray(p.daily.claimed))p.daily.claimed=[];if(!PETS[p.pet])p.pet='cat';return p;}
 let S=null;
 const Store={mode:'loading',players:{},challenges:{},results:{},feed:[],note:''};
@@ -639,7 +653,7 @@ function merge(d){const sp={};(d.players||[]).forEach(p=>{if(p&&p.id)sp[sid(p.id
  (d.results||[]).forEach(r=>{if(r&&r.id)Store.results[sid(r.id)]=r;});
  const fm={};[...(d.feed||[]),...Store.feed].forEach(f=>{if(f&&f.id)fm[f.id]=f;});Store.feed=Object.values(fm).sort((a,b)=>(+b.at||0)-(+a.at||0)).slice(0,40);
  const cut=now()-10*DAY;for(const id in Store.challenges)if(!(Store.challenges[id].at>cut))delete Store.challenges[id];
- if(S&&sp[S.id]&&(+sp[S.id].rev||0)>(+S.rev||0))S=fixPlayer(sp[S.id]);}
+ if(S&&sp[S.id]&&(+sp[S.id].rev||0)>(+S.rev||0))S=fixPlayer(sp[S.id]);setTimeout(syncAvatars,0);}
 // --- 寫入（POST no-cors；失敗就放進待送清單，下次再送）---
 const DELETED={};
 function outbox(){try{return JSON.parse(lsGet(OUTKEY))||[];}catch(e){return [];}}
@@ -660,6 +674,22 @@ function addFeed(icon,msg){if(!S)return;const f={id:uid('f'),pid:S.id,icon,msg,a
 async function delPlayer(id){delete Store.players[id];DELETED[id]=1;persistLocal();send('delplayer',id,{});}
 setInterval(()=>{if(Store.mode==='cloud'&&document.visibilityState==='visible'&&!PL&&!$('#ov')&&['picker','home','plaza','bag'].includes(VIEW))pull().then(rerender);},20000);
 
+
+// ================= 頭貼照片 =================
+const AVKEY='kq_avatars';let AV={};try{AV=JSON.parse(lsGet(AVKEY))||{};}catch(e){AV={};}
+const saveAV=()=>{try{localStorage.setItem(AVKEY,JSON.stringify(AV));}catch(e){}};
+const validImg=s=>typeof s==='string'&&s.length<60000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(s);
+function face(p,cls){const a=AV[p.id];if(p.av&&a&&a.v===p.av&&validImg(a.img))return `<img class="face ${cls||''}" src="${a.img}" alt="">`;return `<span class="face emo ${cls||''}">${petIcon(p)}</span>`;}
+const AVTRY={};
+function syncAvatars(){if(Store.mode!=='cloud')return;const need=Object.values(Store.players).filter(p=>p&&p.id&&p.av&&(!AV[p.id]||AV[p.id].v!==p.av)&&AVTRY[p.id]!==p.av).map(p=>sid(p.id));if(!need.length)return;
+ need.forEach(id=>AVTRY[id]=Store.players[id].av);
+ jsonp(API_URL+'?action=avatars&code='+encodeURIComponent(getCode())+'&ids='+need.join(',')).then(d=>{let ch=false;((d&&d.avatars)||[]).forEach(a=>{if(a&&a.id&&(a.img===''||validImg(a.img))){AV[sid(a.id)]={v:+a.v||0,img:a.img};ch=true;}});if(ch){saveAV();rerender();}}).catch(()=>{need.forEach(id=>delete AVTRY[id]);});}
+function setAvatarFor(pid,img){const v=img?now():0;AV[pid]={v,img};saveAV();send('avatar',pid,{id:pid,v,img});return v;}
+let PENDING_AV;
+function pickPhoto(inp){const f=inp.files&&inp.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();
+ img.onload=()=>{const s=Math.min(img.width,img.height),c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,128,128);PENDING_AV=c.toDataURL('image/jpeg',.75);URL.revokeObjectURL(url);$('#avprev').innerHTML=`<img class="face xl" src="${PENDING_AV}" alt="">`;};
+ img.onerror=()=>{URL.revokeObjectURL(url);toast('這張照片讀不到，換一張試試');};img.src=url;inp.value='';}
+function clearPhoto(){PENDING_AV='';$('#avprev').innerHTML=`<span class="face emo xl">${(PETS[PICK]||PETS.cat).s[0]}</span>`;}
 // ================= 聲音、語音 =================
 let AC;
 function sfx(k){if(S&&S.mute)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const n=AC.currentTime;const seq={ok:[[660,.08],[880,.14]],bad:[[260,.12],[200,.16]],up:[[523,.1],[659,.1],[784,.1],[1047,.25]],tap:[[520,.03]],win:[[784,.1],[988,.1],[1175,.2]]}[k];let t=0;seq.forEach(([f,d])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=k==='bad'?'triangle':'sine';o.frequency.value=f;gg.gain.setValueAtTime(.16,n+t);gg.gain.exponentialRampToValueAtTime(.001,n+t+d);o.connect(gg).connect(AC.destination);o.start(n+t);o.stop(n+t+d+.02);t+=d;});}catch(e){}}
@@ -681,7 +711,7 @@ function confetti(){const em=['🎉','⭐','✨','🎊','💫'];for(let i=0;i<26
 function modeBadge(){let s=Store.mode==='cloud'?'<span class="mode">☁️ 雲端同步：大家的進度互相看得到</span>':'<span class="mode local">📱 單機模式：資料只存在這台裝置</span>';if(Store.note)s+=`<div class="note">${esc(Store.note)}</div>`;return s;}
 function ago(t){const m=Math.floor((now()-t)/60000);if(m<1)return '剛剛';if(m<60)return m+' 分鐘前';const hh=Math.floor(m/60);if(hh<24)return hh+' 小時前';return Math.floor(hh/24)+' 天前';}
 const fmtMs=ms=>Math.round(ms/1000)+' 秒';
-function topBar(){const L=lvInfo(S.xp),pet=PETS[S.pet],st=petStage(L.l),eq=TRE[S.equip];return `<div class="card top"><div class="pet"><span class="bob">${pet.s[st]}</span></div><div style="flex:1;min-width:0"><div class="row" style="justify-content:space-between"><b style="font-size:21px">${esc(S.name)} ${eq?`<span title="${eq.name}">${eq.icon}</span>`:''}</b><span class="chip">Lv.${L.l}</span></div><div class="muted" style="font-size:13px;font-weight:600">${pet.n}・${STAGE_N[st]}${st<4?`（Lv.${EVO[st+1]} 進化）`:''}</div><div class="xpbar"><i style="width:${(L.cur/L.need*100).toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${L.cur} / ${L.need} XP</div></div></div>`;}
+function topBar(){const L=lvInfo(S.xp),pet=PETS[S.pet],st=petStage(L.l),eq=TRE[S.equip];return `<div class="card top"><div class="pet"><span class="bob">${pet.s[st]}</span></div><div style="flex:1;min-width:0"><div class="row" style="justify-content:space-between"><b style="font-size:21px">${S.av?face(S,'sm')+' ':''}${esc(S.name)} ${eq?`<span title="${eq.name}">${eq.icon}</span>`:''}</b><span class="chip">Lv.${L.l}</span></div><div class="muted" style="font-size:13px;font-weight:600">${pet.n}・${STAGE_N[st]}${st<4?`（Lv.${EVO[st+1]} 進化）`:''}</div><div class="xpbar"><i style="width:${(L.cur/L.need*100).toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${L.cur} / ${L.need} XP</div></div></div>`;}
 function gainXP(x,msgs){msgs=msgs||[];const b=lvInfo(S.xp).l,bs=petStage(b);S.xp+=x;const a=lvInfo(S.xp).l;if(a>b){for(let i=b;i<a;i++)S.chests.push('n');msgs.unshift(`⬆️ 升級到 Lv.${a}！得到升級寶箱 🎁`);addFeed('⬆️',`升到 Lv.${a} 了`);const as=petStage(a);if(as>bs){msgs.unshift(`✨ ${PETS[S.pet].n}進化成 ${PETS[S.pet].s[as]}（${STAGE_N[as]}）！`);addFeed('✨',`的${PETS[S.pet].n}進化成 ${PETS[S.pet].s[as]} 了`);}}return a-b;}
 function giveChest(tier,msgs){S.chests.push(tier);if(msgs)msgs.push(tier==='boss'?'🎁 得到魔王寶箱！（比較容易開出稀有法寶）':'🎁 得到一個寶箱！到法寶袋打開');}
 
@@ -701,7 +731,7 @@ function useLocal(){lsSet('kq_localonly','1');boot();}
 function picker(){VIEW='picker';S=null;clearArc();const ps=Object.values(Store.players).filter(p=>p&&p.id&&p.name).sort((a,b)=>(b.at||0)-(a.at||0));
  const old=lsGet(OLDKEY)&&!lsGet('kq_migrated');
  h(`<div class="wrap"><div class="hero"><div style="font-size:56px">⚔️</div><h1>竹林小隊練功坊</h1><p class="muted" style="font-weight:700">三年級數學 × 英文・誰要來練功？</p>${modeBadge()}</div>
-<div class="nodes">${ps.map(p=>`<button class="node" onclick="choose('${sid(p.id)}')"><div class="ic">${petIcon(p)}</div><b>${esc(p.name)}</b><small>Lv.${lvInfo(p.xp).l}${p.pin?' 🔒':''}</small></button>`).join('')}<button class="node" onclick="onboard()"><div class="ic">➕</div><b>新增小勇士</b><small>建立新角色</small></button></div>
+<div class="nodes">${ps.map(p=>`<button class="node" onclick="choose('${sid(p.id)}')"><div class="ic">${face(p,'lg')}</div><b>${esc(p.name)}</b><small>${petIcon(p)} Lv.${lvInfo(p.xp).l}${p.pin?' 🔒':''}</small></button>`).join('')}<button class="node" onclick="onboard()"><div class="ic">➕</div><b>新增小勇士</b><small>建立新角色</small></button></div>
 ${old?'<div style="text-align:center;margin-top:16px"><button class="btn gh sm" onclick="importOld()">📥 匯入這台裝置之前的單人紀錄</button></div>':''}</div>`);}
 function choose(id){const p=Store.players[id];if(!p)return;if(p.pin){modal(`<h3>${petIcon(p)} ${esc(p.name)}</h3><p>請輸入密碼</p><input class="txt" id="pinin" inputmode="numeric" maxlength="4" style="margin-bottom:12px"><div class="row" style="justify-content:flex-end"><button class="btn gh" onclick="closeModal()">取消</button><button class="btn" onclick="checkPin('${sid(id)}')">進入</button></div>`);setTimeout(()=>{const e=$('#pinin');if(e)e.focus();},50);return;}select(id);}
 function checkPin(id){const p=Store.players[id],e=$('#pinin');if(p&&e&&e.value===String(p.pin)){closeModal();select(id);}else if(e){e.value='';e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');}}
@@ -709,10 +739,11 @@ function select(id){S=fixPlayer(Store.players[id]);lsSet(MEKEY,S.id);home();}
 function importOld(){try{const o=JSON.parse(lsGet(OLDKEY));if(!o||!o.name)return toast('找不到舊紀錄');S=fixPlayer(Object.assign(o,{id:uid('p'),wrong:[],pin:'',chests:['n'],items:{lamp:1,shield:1,hourglass:0,scroll:0}}));save();lsSet('kq_migrated','1');lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');home();}catch(e){toast('匯入失敗');}}
 
 let PICK=null,EDITING=false;
-function onboard(edit){EDITING=!!edit&&!!S;PICK=EDITING?S.pet:null;VIEW='onboard';
+function onboard(edit){EDITING=!!edit&&!!S;PICK=EDITING?S.pet:null;PENDING_AV=undefined;VIEW='onboard';
  h(`<div class="wrap"><div class="hero"><div style="font-size:60px">⚔️</div><h1>${EDITING?'修改角色':'新增小勇士'}</h1></div>
 <div class="card"><h3>你叫什麼名字？</h3><input class="txt" id="nm" maxlength="10" placeholder="輸入名字" value="${EDITING?esc(S.name):''}" style="margin:10px 0 16px">
 <h3>選一隻夥伴陪你練功</h3><div class="pets">${Object.entries(PETS).map(([k,p])=>`<button class="petc ${PICK===k?'sel':''}" id="pc-${k}" onclick="pickPet('${k}')"><span>${p.s[0]}</span>${p.n}<div style="font-size:18px">${p.s.slice(1).join('')}</div></button>`).join('')}</div>
+<h3>頭貼照片（可不放）</h3><div class="row" style="margin:10px 0 6px;flex-wrap:wrap"><span id="avprev">${EDITING?face(S,'xl'):'<span class="face emo xl">📷</span>'}</span><label class="btn gh sm" style="cursor:pointer">📷 選照片／拍照<input type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"></label><button class="btn gh sm" onclick="clearPhoto()">不用照片</button></div><p class="muted" style="margin:0 0 16px;font-size:14px">會縮成小小的圓形頭貼，排行榜和廣場會顯示。只有拿到家庭通關密語的人看得到。</p>
 <h3>密碼（可不填）</h3><p class="muted" style="margin:4px 0 8px;font-size:14px">設 4 位數字，別人就不能用你的角色練習</p><input class="txt" id="pin" inputmode="numeric" maxlength="4" placeholder="例如 1234" value="${EDITING?esc(S.pin):''}" style="margin-bottom:16px">
 <div class="row"><button class="btn gh" onclick="${EDITING?'home()':'picker()'}">取消</button><button class="btn or" style="flex:1" onclick="startGame()">${EDITING?'儲存':'開始冒險 ➜'}</button></div></div>
 ${EDITING?'':`<div class="card" style="margin-top:14px;font-size:15px;line-height:1.75"><b>怎麼玩？</b><br>⭐ 每關 8 題，答對越多星星越多；拿到 2 顆星就能挑戰下一級<br>🐣 累積經驗值升級，夥伴會進化<br>🎁 3 顆星、升級、每日任務都能拿寶箱，打開會掉法寶和道具<br>🏟️ 在好友廣場看大家的進度，還能發起對決</div>`}</div>`);}
@@ -721,8 +752,8 @@ function startGame(){const n=$('#nm').value.trim(),pin=$('#pin').value.trim();
  if(!n){$('#nm').focus();$('#nm').classList.add('shake');setTimeout(()=>$('#nm').classList.remove('shake'),400);return;}
  if(pin&&!/^\d{4}$/.test(pin))return toast('密碼要是 4 位數字，或是不填');
  if(!PICK)return okModal('請先選一隻夥伴喔！');
- if(EDITING){S.name=n;S.pet=PICK;S.pin=pin;save();toast('已儲存');return home();}
- S=fixPlayer(defPlayer());S.id=uid('p');S.name=n;S.pet=PICK;S.pin=pin;save();lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');sfx('win');home();}
+ if(EDITING){S.name=n;S.pet=PICK;S.pin=pin;if(PENDING_AV!==undefined)S.av=setAvatarFor(S.id,PENDING_AV);save();toast('已儲存');return home();}
+ S=fixPlayer(defPlayer());S.id=uid('p');S.name=n;S.pet=PICK;S.pin=pin;if(PENDING_AV)S.av=setAvatarFor(S.id,PENDING_AV);save();lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');sfx('win');home();}
 
 // ================= 首頁 =================
 const MISSIONS=[{id:'a',t:'完成 3 個關卡',need:3,get:d=>d.done},{id:'b',t:'答對 30 題',need:30,get:d=>d.correct},{id:'c',t:'數學和英文各玩 1 關',need:2,get:d=>(d.math>0?1:0)+(d.eng>0?1:0)},{id:'d',t:'完成上面三個任務',need:3,get:d=>['a','b','c'].filter(x=>d.claimed.includes(x)).length,chest:1}];
@@ -914,12 +945,16 @@ function claimCh(cid){const c=Store.challenges[cid];if(!validCh(c)||S.chDone[cid
 // ================= 好友廣場 =================
 let LB='xp';
 const LBS={xp:['等級',p=>+p.xp||0,p=>`Lv.${lvInfo(p.xp).l}`],stars:['星星',p=>starsOf(p),p=>`⭐ ${starsOf(p)}`],streak:['連續天數',p=>streakOf(p),p=>`🔥 ${streakOf(p)} 天`],arcade:['九九快打',p=>+p.arcadeBest||0,p=>`⚡ ${+p.arcadeBest||0} 題`],tre:['法寶',p=>Object.keys(p.treasures||{}).filter(k=>TRE[k]).length,p=>`🎒 ${Object.keys(p.treasures||{}).filter(k=>TRE[k]).length} 個`]};
-function lbHTML(ps){const [,f,show]=LBS[LB];const rows=ps.slice().sort((a,b)=>f(b)-f(a)||(+b.xp||0)-(+a.xp||0));let rank=0,prev=null;
- return `<div class="chips" style="margin:0 0 10px">${Object.entries(LBS).map(([k,v])=>`<button class="chip ${LB===k?'act':''}" onclick="LB='${k}';plaza()">${v[0]}</button>`).join('')}</div><div class="card" style="padding:8px 14px">${rows.map((p,i)=>{const v=f(p);if(v!==prev){rank=i+1;prev=v;}const md=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.';return `<div class="mis" ${p.id===S.id?'style="background:#FFFBF0;border-radius:12px"':''}><div style="font-size:26px;width:38px;text-align:center">${md}</div><div style="font-size:30px">${petIcon(p)}</div><div class="t">${esc(p.name)}${p.id===S.id?' <span class="muted">（我）</span>':''} ${TRE[p.equip]?TRE[p.equip].icon:''}</div><b>${show(p)}</b></div>`;}).join('')}</div>`;}
+function lbHTML(ps){const [,f,show]=LBS[LB];const rows=ps.slice().sort((a,b)=>f(b)-f(a)||(+b.xp||0)-(+a.xp||0));let rank=0,prev=null;const RK=new Map();rows.forEach((p,i)=>{const v=f(p);if(v!==prev){rank=i+1;prev=v;}RK.set(p,rank);});
+ const md=r=>r===1?'🥇':r===2?'🥈':r===3?'🥉':r+'.';
+ const pod=rows.slice(0,3),order=pod.length===3?[pod[1],pod[0],pod[2]]:pod.length===2?[pod[1],pod[0]]:pod;
+ const podium=`<div class="podium">${order.map(p=>`<div class="pod r${Math.min(RK.get(p),3)} ${p.id===S.id?'me':''}"><div class="md">${md(RK.get(p))}</div>${face(p,RK.get(p)===1?'xl':'lg')}<b>${esc(p.name)}</b><small>${show(p)}</small><div class="step"></div></div>`).join('')}</div>`;
+ const rest=rows.slice(3).map(p=>`<div class="mis" ${p.id===S.id?'style="background:#FFFBF0;border-radius:12px"':''}><div style="font-size:20px;width:38px;text-align:center;font-weight:800">${md(RK.get(p))}</div>${face(p,'')}<div class="t">${esc(p.name)} ${petIcon(p)}${p.id===S.id?' <span class="muted">（我）</span>':''}</div><b>${show(p)}</b></div>`).join('');
+ return `<div class="chips" style="margin:0 0 10px">${Object.entries(LBS).map(([k,v])=>`<button class="chip ${LB===k?'act':''}" onclick="LB='${k}';plaza()">${v[0]}</button>`).join('')}</div><div class="card" style="padding:10px 14px">${podium}${rest}</div>`;}
 
 function plaza(){if(!S)return picker();if(VIEW!=='plaza'&&Store.mode==='cloud'&&now()-LASTPULL>5000)pull().then(rerender);VIEW='plaza';clearArc();const ps=Object.values(allPlayers()).filter(p=>p&&p.id&&p.name).sort((a,b)=>(b.at||0)-(a.at||0));
  const cards=ps.map(p=>{const L=lvInfo(p.xp),me=p.id===S.id,eq=TRE[p.equip],tre=Object.keys(p.treasures||{}).filter(k=>TRE[k]).length;
-  return `<div class="pcard ${me?'me':''}"><div class="pet sm">${petIcon(p)}</div><div style="flex:1;min-width:0"><b style="font-size:18px">${esc(p.name)}</b>${me?' <span class="muted">（我）</span>':''} ${eq?`<span title="${eq.name}">${eq.icon}</span>`:''}<div class="muted" style="font-size:13px;font-weight:700">Lv.${L.l}・⭐ ${starsOf(p)}・🔥 ${streakOf(p)} 天・🎒 法寶 ${tre}・🏅 ${(p.stickers||[]).length}</div><div class="xpbar"><i style="width:${(L.cur/L.need*100).toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${p.lastDay===today()?'✅ 今天練習過了':'💤 今天還沒練習'}</div></div>${me?'':`<button class="btn or sm" onclick="newChallenge('${sid(p.id)}')">⚔️</button>`}</div>`;}).join('');
+  return `<div class="pcard ${me?'me':''}">${face(p,'lg')}<div style="flex:1;min-width:0"><b style="font-size:18px">${esc(p.name)}</b> ${petIcon(p)}${me?' <span class="muted">（我）</span>':''} ${eq?`<span title="${eq.name}">${eq.icon}</span>`:''}<div class="muted" style="font-size:13px;font-weight:700">Lv.${L.l}・⭐ ${starsOf(p)}・🔥 ${streakOf(p)} 天・🎒 法寶 ${tre}・🏅 ${(p.stickers||[]).length}</div><div class="xpbar"><i style="width:${(L.cur/L.need*100).toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${p.lastDay===today()?'✅ 今天練習過了':'💤 今天還沒練習'}</div></div>${me?'':`<button class="btn or sm" onclick="newChallenge('${sid(p.id)}')">⚔️</button>`}</div>`;}).join('');
  const cs=myChs().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,15);
  const chs=cs.length?cs.map(c=>{const st=chState(c),mine=chParts(c).includes(S.id);let act='';
   if(c.to.map(sid).includes(S.id)&&!chRes(c,S.id)&&!st.expired)act=`<button class="btn or sm" onclick="acceptCh('${sid(c.id)}')">⚔️ 應戰</button>`;
@@ -973,7 +1008,7 @@ ${weak.length?`<div class="msg">需要多練習：${weak.map(r=>`${r.n.icon} ${r
 <div class="card" style="margin-top:14px"><h3>🏰 數學（翰林三上）</h3>${table('math')}</div>
 <div class="card" style="margin-top:14px"><h3>🌳 英文</h3>${table('eng')}</div>
 <div class="card" style="margin-top:14px;font-size:15px"><h3>⚙️ 管理 ${esc(K.name)}</h3>
-<div class="row" style="flex-wrap:wrap">${pid===S.id?'<button class="btn gh sm" onclick="onboard(true)">改名字／夥伴／密碼</button>':''}${K.pin&&pid!==S.id?`<button class="btn gh sm" onclick="clearPin('${pid}')">清除密碼</button>`:''}${pid!==S.id?`<button class="btn rd sm" onclick="askDel('${pid}')">刪除這個角色</button>`:'<span class="muted" style="font-size:14px">要刪除目前的角色，請先「換人」再到家長區刪除。</span>'}</div>
+<div class="row" style="flex-wrap:wrap">${pid===S.id?'<button class="btn gh sm" onclick="onboard(true)">改名字／夥伴／密碼</button>':''}${K.pin&&pid!==S.id?`<button class="btn gh sm" onclick="clearPin('${pid}')">清除密碼</button>`:''}${K.av?`<button class="btn gh sm" onclick="removeAv('${pid}')">移除頭貼</button>`:''}${pid!==S.id?`<button class="btn rd sm" onclick="askDel('${pid}')">刪除這個角色</button>`:'<span class="muted" style="font-size:14px">要刪除目前的角色，請先「換人」再到家長區刪除。</span>'}</div>
 <p class="muted" style="margin-bottom:0">密碼只是防止孩子誤用別人的角色，不是安全保護。</p></div>
 <div class="card" style="margin-top:14px;font-size:15px"><h3>🔗 ${Store.mode==='cloud'?'給孩子的專屬連結':'雲端同步'}</h3>${Store.mode==='cloud'?`<p class="muted">用這個連結或 QR code 打開，就不用再輸入家庭通關密語。請只給自己的孩子。</p><div id="qr" style="display:flex;justify-content:center;margin:10px 0"></div><input class="txt" id="kidlink" readonly value="${esc(kidLink())}" style="font-size:14px"><div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyLink()">複製連結</button><button class="btn gh sm" onclick="lsSet(CODEKEY,'');boot()">更換通關密語</button><button class="btn gh sm" onclick="useLocal()">改成單機模式</button></div>`:`<p class="muted">目前是單機模式。${API_URL.startsWith('__')?'這個網站還沒設定雲端。':'要和其他孩子同步，請改回雲端模式。'}</p>${API_URL.startsWith('__')?'':'<button class="btn sm" onclick="lsSet(\'kq_localonly\',\'\');boot()">改回雲端模式</button>'}`}</p></div></div>`);if(Store.mode==='cloud')drawQR();}
 
@@ -981,6 +1016,7 @@ function askDel(pid){confirmBox(`確定要刪除 ${esc(pname(pid))} 的角色和
 function kidLink(){return location.origin+location.pathname+'?k='+encodeURIComponent(getCode());}
 function copyLink(){const v=kidLink();if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('已複製連結'),()=>{$('#kidlink').select();});else $('#kidlink').select();}
 function drawQR(){const el=$('#qr');if(!el)return;const go=()=>{try{el.innerHTML='';new QRCode(el,{text:kidLink(),width:180,height:180});}catch(e){}};if(window.QRCode)return go();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';sc.onload=go;document.head.appendChild(sc);}
+function removeAv(pid){const p=allPlayers()[pid];if(!p)return;setAvatarFor(pid,'');if(pid===S.id){S.av=0;save();}else{const q=fixPlayer(p);q.av=0;q.rev=(+q.rev||0)+1;putPlayer(q);}toast('已移除頭貼');parent(pid);}
 function clearPin(pid){const p=allPlayers()[pid];if(!p)return;const q=fixPlayer(p);q.pin='';q.rev=(+q.rev||0)+1;putPlayer(q);toast('已清除密碼');parent(pid);}
 
 // ================= 鍵盤 =================
