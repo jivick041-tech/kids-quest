@@ -235,119 +235,193 @@ function pieSVG(d,s){const c=60,r=52;let o='';for(let i=0;i<d;i++){const a0=-Mat
 function barSVG(d,s){const w=200/d;let o='';for(let i=0;i<d;i++)o+=`<rect x="${(4+i*w).toFixed(1)}" y="4" width="${w.toFixed(1)}" height="44" fill="${i<s?'#7CC8FF':'#fff'}" stroke="#2B2A4C" stroke-width="2.5"/>`;return `<svg viewBox="0 0 208 52" width="240" height="60">${o}</svg>`;}
 function fracArt(d,s){return RND()<.5?pieSVG(d,s):barSVG(d,s);}
 
-// ---------- 數學：翰林三上 ----------
+
+// ---------- 數學：三年級上學期（翰林／康軒共用＋各版本專屬單元）----------
+const tpl=T=>lv=>P(T[Math.min(lv,T.length)-1])();
+const NM=()=>P(['小明','小美','阿傑','芷晴','宇翔','奇奇','妙妙','樂樂','亦喬','哲宇','羽涵','倩怡']);
+const CN=['零','一','二','三','四','五','六','七','八','九'];
+function cnum(n){const d=String(n).split('').map(Number),u=['千','百','十',''];let s='',zero=false;d.forEach((x,i)=>{if(x===0){zero=true;return;}if(zero&&s)s+='零';zero=false;s+=CN[x]+u[4-d.length+i];});return s;}
+function uniqDigits(k,allowZero){const ds=shuf([0,1,2,3,4,5,6,7,8,9].filter(x=>allowZero||x)).slice(0,k);return ds;}
+const fmtMix=(a,b,B,s)=>a?(b?`${a} ${B} ${b} ${s}`:`${a} ${B}`):`${b} ${s}`;
+
+// 公斤/公克、公升/毫升 共用產生器
+function bigSmallGen(B,s,C){return tpl([
+ [()=>{const k=R(2,9);return nq(`<b>${k}</b> ${B} = ? ${s}`,k*1000,`1 ${B} = 1000 ${s}`);},
+  ()=>{const k=R(1,9),g=P([5,8,50,60,305,860,R(11,99),R(101,999)]);return nq(`<b>${k} ${B} ${g} ${s}</b> = ? ${s}`,k*1000+g,`${k} ${B} = ${k*1000} ${s}，再加 ${g}；小心 0 要補在正確的位置`);},
+  ()=>{const k=R(1,9),g=P([8,40,R(1,9),R(11,99),R(101,999)]),x=k*1000+g;return RND()<.5?nq(`<b>${x}</b> ${s} = ? ${B} ${g} ${s}`,k,`每 1000 ${s} 換成 1 ${B}`):nq(`<b>${x}</b> ${s} = ${k} ${B} ? ${s}`,g,`${x} − ${k*1000} = ${g}`);},
+  ()=>{const k=R(2,9),g=R(1,9),A=k*1000+g,Bv=P([k*1000+g*10,k*100+g,k*1000+g*100,A]);return cmpq(`<b>${k} ${B} ${g} ${s}</b> ○ <b>${Bv}</b> ${s}`,A,Bv,`${k} ${B} ${g} ${s} = ${A} ${s}，不是 ${k}${g}…，要補 0`);},
+  ()=>{const k=R(2,8),g=R(10,99)*10,A=k*1000+g,x=A+P([-100,-10,10,100,900]);return cmpq(`<b>${x}</b> ${s} ○ <b>${k} ${B} ${g} ${s}</b>`,x,A,'先換成同一個單位再比');}],
+ [()=>{const a1=R(1,4),b1=R(300,900),a2=R(1,4),b2=R(1100-b1,999),tot=(a1+a2)*1000+b1+b2,C=Math.floor(tot/1000),D=tot%1000;return mc(`<b>${a1} ${B} ${b1} ${s} + ${a2} ${B} ${b2} ${s}</b><br>= ?`,fmtMix(C,D,B,s),[fmtMix(C-1,D,B,s),fmtMix(C,(D+100)%1000||100,B,s),fmtMix(C+1,D,B,s)],`${s}的部分 ${b1}+${b2} = ${b1+b2}，超過 1000 要進位 1 ${B}`);},
+  ()=>{const a=R(1,3),b=R(10,600),x=R(b+50,999);return nq(`${C.bigA} <b>${a} ${B} ${b} ${s}</b>，${C.smallA} <b>${x} ${s}</b>。${C.diffQ}`,a*1000+b-x,`先把 ${a} ${B} ${b} ${s} 換成 ${a*1000+b} ${s}`);},
+  ()=>{const cup=P([200,250,300,400,450]),n=R(1,3),m=R(50,cup-10);return nq(C.t3(cup,n,m),cup*n+m,`${n} 杯是 ${cup*n} ${s}，再加 ${m}`);},
+  ()=>{let vals,v;do{vals=shuf([[1,0],[0,R(880,990)],[1,R(20,99)],[0,R(1010,1090)]]).slice(0,3);v=vals.map(([a,b])=>a*1000+b);}while(new Set(v).size<3);const opts=vals.map(([a,b])=>fmtMix(a,b,B,s));const big=opts[v.indexOf(Math.max(...v))];return mc(`下面哪一個${C.most}？`,big,opts.filter(o=>o!==big),'全部換成同一個單位再比較',{lo:1});},
+  ()=>{const a=R(3,6),b=R(100,800),c=R(1,a-1),d=R(b+1,999),tot=a*1000+b-c*1000-d;return nq(`<b>${a} ${B} ${b} ${s} − ${c} ${B} ${d} ${s}</b> = ? ${s}`,tot,`${s}不夠減，要向 ${B} 借 1（= 1000 ${s}）`);}],
+ [()=>{const X=R(2,4)*1000+R(1,9)*100,c=P([150,200,250,300]),n=R(2,5);return nq(C.t31(fmtMix(Math.floor(X/1000),X%1000,B,s),n,c),X-c*n,`倒出 ${c}×${n} = ${c*n} ${s}，用 ${X} 去減`);},
+  ()=>{const n=P([2,4,5,8]),a=R(1,4),tot=a*1000;return nq(C.t32(a,n),tot/n,`${a} ${B} = ${tot} ${s}，再除以 ${n}`);},
+  ()=>{const vs=[R(800,999),R(1000,1099),R(1100,1500)];const nm=['甲','乙','丙'],label=vs.map(v=>fmtMix(Math.floor(v/1000),v%1000,B,s));return nq(C.t33(label),vs[0]+vs[1]+vs[2],'全部換成 '+s+' 再相加');},
+  ()=>{const a=R(2,5),b=R(1,9)*100,per=P([100,200,250]),tot=a*1000+b;const k=Math.floor(tot/per);return nq(C.t34(fmtMix(a,b,B,s),per),k,`${tot}÷${per}，剩下不夠一份的不算`);}]
+]);}
+
 const MATH=[
-{id:'m1',unit:'第一單元',name:'10000以內的數',icon:'🔢',gen(lv){
- if(lv===1){
-  if(RND()<.5){const a=R(1,9),b=R(0,9),c=R(0,9),d=R(0,9);return nq(`<b>${a}</b> 個千、<b>${b}</b> 個百、<b>${c}</b> 個十和 <b>${d}</b> 個一，合起來是多少？`,a*1000+b*100+c*10+d,'依序寫在千位、百位、十位、個位；沒有的位要寫 0');}
-  const n=R(1000,9999),k=R(0,3),nm=['千','百','十','個'];return nq(`${big(n)}<br>${nm[k]}位上的數字是多少？`,+String(n)[k],'從左邊數：千位、百位、十位、個位');}
- if(lv===2){
-  if(RND()<.45){const a=R(1000,9999);let b=a+P([1,10,100,1000,-1,-10,-100,-1000])*R(1,3);if(b<1000||b>9999)b=R(1000,9999);if(RND()<.1)b=a;return cmpq(`${big(a+' ○ '+b)}<br>○ 裡要填什麼？`,a,b,'先比千位，一樣再比百位、十位、個位');}
-  const st=P([1,10,100,1000]),n=R(1500,8400),more=RND()<.5,nm={1:'個',10:'十',100:'百',1000:'千'}[st];
-  return nq(`比 <b>${n}</b> ${more?'多':'少'} <b>${st}</b> 是多少？`,more?n+st:n-st,`只看${nm}位：${more?'加':'減'} 1，記得${more?'進位':'退位'}`);}
- const t=R(1,3);
- if(t===1){const k=R(1,8),f=R(0,1),hh=R(0,4),fi=R(0,1),te=R(0,4),o=R(0,4);const parts=[[k,'張 1000 元'],[f,'張 500 元'],[hh,'張 100 元'],[fi,'個 50 元'],[te,'個 10 元'],[o,'個 1 元']].filter(p=>p[0]>0).map(p=>p[0]+' '+p[1]);
-  return nq(`錢包裡有 ${parts.join('、')}，一共是多少元？`,k*1000+f*500+hh*100+fi*50+te*10+o,'先數大鈔，再數硬幣，一個一個加起來');}
- if(t===2){const a=R(12,60),b=R(11,95);return nq(`<b>${a}</b> 個百和 <b>${b}</b> 個十，合起來是多少？`,a*100+b*10,`${a} 個百是 ${a*100}，${b} 個十是 ${b*10}`);}
- const x=R(12,99);return nq(`${big(x*100)}<br>是幾個百？`,x,'1 個百 = 100，10 個百 = 1000');}},
+{id:'m1',name:'10000以內的數',icon:'🔢',gen:tpl([
+ [()=>{const a=R(1,7),b=R(10,19),c=R(0,9),d=R(0,9);return nq(`<b>${a}</b> 個千、<b>${b}</b> 個百、<b>${c}</b> 個十和 <b>${d}</b> 個一，合起來是多少？`,a*1000+b*100+c*10+d,`${b} 個百 = ${Math.floor(b/10)} 個千 ${b%10} 個百，要進位到千位`);},
+  ()=>{let n;do{n=R(1000,9999);}while(new Set(String(n)).size===4);const s=String(n),dg=s.split('').find((x,i)=>s.indexOf(x)!==s.lastIndexOf(x)&&x!=='0');if(!dg)return nq(`${big(n)}<br>百位上的數字表示多少？`,+s[1]*100,'百位的數字要乘 100');const i1=s.indexOf(dg),i2=s.lastIndexOf(dg),pick=RND()<.5?i1:i2,val=+dg*Math.pow(10,3-pick);return nq(`${big(n)}<br>${pick===i1?'左邊':'右邊'}的 ${dg} 表示多少？`,val,'看它在第幾位：千位 ×1000、百位 ×100、十位 ×10');},
+  ()=>{const n=R(1,9)*1000+P([0,R(1,9)*100])+P([0,R(1,9)*10])+R(0,9);const s=String(n),alt=[+(s.replace(/0/g,'')),n+P([10,100,90]),+s.split('').reverse().join('')].filter(x=>x>0&&x!==n);return mc(`「${cnum(n)}」寫成數字是多少？`,n,alt,'讀到「零」的地方，那一位要寫 0');},
+  ()=>{const st=P([20,25,50,200,250,500]),s=st*R(1,8);const a=[0,1,2,3,4].map(i=>s+st*i),k=R(1,3),ans=a[k];a[k]='?';return nq(`數線上的數：${a.join('、')}<br>? 是多少？`,ans,`先找出每一格差多少（${st}）`);},
+  ()=>{const a=R(1,8),b=R(0,9),c=R(10,25),d=R(0,9);return nq(`<b>${a}</b> 個千、<b>${b}</b> 個百、<b>${c}</b> 個十、<b>${d}</b> 個一，合起來是多少？`,a*1000+b*100+c*10+d,`${c} 個十 = ${c*10}，要進位到百位`);}],
+ [()=>{const zero=RND()<.5,ds=uniqDigits(4,zero);const sorted=ds.slice().sort((x,y)=>y-x),mx=+sorted.join('');let asc=ds.slice().sort((x,y)=>x-y);if(asc[0]===0){const i=asc.findIndex(x=>x>0);[asc[0],asc[i]]=[asc[i],asc[0]];}const mn=+asc.join('');return RND()<.5?nq(`用 ${ds.map(x=>`[${x}]`).join(' ')} 四張數字卡排成四位數，<b>最大</b>是多少？`,mx,'大的數字放前面'):nq(`用 ${ds.map(x=>`[${x}]`).join(' ')} 四張數字卡排成四位數，<b>最小</b>是多少？`,mn,ds.includes(0)?'0 不能放在千位，千位放最小的非 0 數字，0 放百位':'小的數字放前面');},
+  ()=>{const a=R(1000,9999),sa=String(a).split(''),p=R(1,3),q=sa.slice();q[p]='?';const qs=q.join('');let ds=sa.slice();if(RND()<.67){const i=R(0,p-1);let nd;do{nd=R(i===0?1:0,9);}while(nd===+sa[i]);ds[i]=String(nd);for(let j=i+1;j<4;j++)ds[j]=String(R(0,9));}else{for(let j=p;j<4;j++)ds[j]=String(R(0,9));}const b=+ds.join(''),lo=+qs.replace('?','0'),hi=+qs.replace('?','9'),ans=hi<b?'＜':lo>b?'＞':'不一定';return {type:'mc',prompt:`${big(qs+' ○ '+b)}<br>（? 代表 0～9 的任一個數字）○ 裡要填什麼？`,opts:['＞','＜','不一定'],ans:['＞','＜','不一定'].indexOf(ans),tip:'從千位開始比；如果在 ? 前面就已經比出大小，就不用管 ? 是多少',cmp:1};},
+  ()=>{const t=R(1,9),u=R(0,9),lo=R(1,9)*1000+R(1,6)*100+R(0,9)*10,hiV=lo+R(3,6)*100;const T=Math.floor(lo/1000);let cnt=0,list=[];for(let h=0;h<=9;h++){const v=T*1000+h*100+t*10+u;if(v>lo&&v<hiV){cnt++;list.push(v);}}if(!cnt)return nq(`比 ${lo} 大 1 的數是多少？`,lo+1,'');return nq(`定位板上的四位數是 <b>${T} ? ${t} ${u}</b>（? 是百位數字），它比 ${lo} 大、比 ${hiV} 小。這樣的四位數有幾個？`,cnt,`把 ? 從 0 試到 9，一個一個檢查`);},
+  ()=>{const n=R(1,9)*1000+R(0,9)*100+R(0,9)*10+R(0,9);const s=String(n).split('').map(Number);return nq(`用 1000 元、100 元、10 元、1 元付 <b>${n}</b> 元，要剛好、而且張數（個數）最少，一共要幾張（個）？`,s.reduce((a,b)=>a+b,0),'每一位的數字就是那種錢的張數，全部加起來');},
+  ()=>{const st=P([1,10,100,1000]),k=R(2,5),n=R(1500,9999-k*st),more=RND()<.5||n-k*st<1000;return nq(`${n} ${more?'加上':'減去'} ${k} 個 ${st}，是多少？`,more?n+k*st:n-k*st,'只看那一位變化，記得進位或退位');}],
+ [()=>{const d=R(1,9),hiOrLo=RND()<.5,tail=P([50,0,5]);return nq(`福利品特賣會的洗衣機價格是 <b>${d}■${String(tail).padStart(2,'0')}</b> 元（■ 代表 0～9 的數字）。洗衣機${hiOrLo?'最多':'最少'}可能要花多少元？`,d*1000+(hiOrLo?900:0)+tail,`■ 在百位，${hiOrLo?'最多填 9':'最少填 0'}`);},
+  ()=>{const pay=R(2,8)*1000,ch=R(1,9);return nq(`奶奶付了 ${pay} 元，找回 ${ch} 元，她買的東西標價是 <b>${pay/1000-1}99■</b> 元。■ 是多少？`,10-ch,`東西的價錢是 ${pay}−${ch} = ${pay-ch} 元`);},
+  ()=>{const th=R(1,3),d=R(1,4-th),tens=th+d,h=2*tens,u=th+tens;return nq(`一個四位數：千位是 ${th}，十位比千位多 ${d}，百位是十位的 2 倍，個位是千位和十位的和。這個四位數是多少？`,th*1000+h*100+tens*10+u,'先算十位，再算百位和個位');},
+  ()=>{const a=R(1,8)*1000+R(0,9)*100+R(1,9)*10,b=a+R(5,30)*10+R(1,9);let c=0;for(let v=a+1;v<b;v++)if(v%10===0)c++;return nq(`比 ${a} 大、比 ${b} 小的數中，個位是 0 的有幾個？`,c,'個位是 0 就是 10 的倍數，從 '+(Math.floor(a/10)*10+10)+' 開始數');},
+  ()=>{const a=R(12,49),b=R(11,39);return nq(`${a} 張 100 元和 ${b} 個 10 元，合起來是幾元？`,a*100+b*10,`${a} 張 100 元是 ${a*100} 元`);}]
+])},
 
-{id:'m2',unit:'第二單元',name:'10000以內的加減',icon:'➕',gen(lv){
- const add=RND()<.5;
- if(lv===1){if(add){const a=R(150,899),b=R(120,999-a+R(0,300));return nq(big(`${a} + ${b} = ?`),a+b,'用直式，從個位開始加，滿 10 要進位');}
-  const a=R(300,999),b=R(110,a-40);return nq(big(`${a} − ${b} = ?`),a-b,'用直式，從個位開始減，不夠減要向前一位借 1');}
- if(lv===2){if(add){const a=R(1000,7999),b=R(300,9999-a);return nq(big(`${a} + ${b} = ?`),a+b,'四位數一樣從個位加起，進位別忘了');}
-  const a=RND()<.3?P([2000,3005,5003,6000,7004,8000]):R(2000,9999),b=R(500,a-100);return nq(big(`${a} − ${b} = ?`),a-b,'遇到 0 不夠減，要連續向前借；做完可以用加法驗算');}
- const t=R(1,5),a=R(1200,6000),b=R(300,a-200);
- if(t===1)return nq(`圖書館有 ${a} 本書，又買進 ${b} 本，現在一共有幾本？`,a+b,'「又買進」→ 變多 → 用加法');
- if(t===2)return nq(`小明存了 ${a} 元，買腳踏車花了 ${b} 元，還剩幾元？`,a-b,'「花了、還剩」→ 用減法');
- if(t===3)return nq(`學校男生有 ${a} 人，女生有 ${b} 人，男生比女生多幾人？`,a-b,'「多幾人」→ 大的減小的');
- if(t===4){const c=R(120,900);return nq(`果園第一天採了 ${b} 顆橘子，第二天比第一天多採 ${c} 顆，第二天採了幾顆？`,b+c,'第二天 = 第一天 + 多採的');}
- const n=R(800,1500),x=R(100,n/3|0),y=R(100,n/3|0);return nq(`一本故事書有 ${n} 頁，小美第一天看了 ${x} 頁，第二天看了 ${y} 頁，還剩幾頁沒看？`,n-x-y,`先算看了幾頁：${x}+${y}，再用全部去減`);}},
+{id:'m2',name:'四位數的加減',icon:'➕',gen:tpl([
+ [()=>{const a=R(1000,7999),b=R(1000,9999-a);return nq(big(`${a} + ${b} = ?`),a+b,'從個位加起，滿 10 進位');},
+  ()=>{const a=R(3000,9999),b=R(1000,a-500);return nq(big(`${a} − ${b} = ?`),a-b,'不夠減要向前一位借 1');},
+  ()=>{const a=P([2000,3005,5003,6000,7004,8000,4010]),b=R(1000,a-100);return nq(big(`${a} − ${b} = ?`),a-b,'遇到 0 要連續向前借');},
+  ()=>{const s=P([5000,6000,7000,8000,10000].filter(x=>x<=9999)),b=R(1200,s-500);return nq(big(`□ + ${b} = ${s}`)+'<br>□ 是多少？',s-b,`□ = ${s} − ${b}`);},
+  ()=>{const a=R(2000,9000),b=R(500,a-500);return nq(big(`${a} − □ = ${a-b}`)+'<br>□ 是多少？',b,`□ = ${a} − ${a-b}`);}],
+ [()=>{const a=R(1500,4000),c=R(100,600),x=R(300,Math.floor((a-c)/2)-50);return nq(`商店有 ${a} 個口罩，第一天賣出 ${x} 個，第二天比第一天多賣 ${c} 個。兩天賣完後還剩幾個？`,a-x-(x+c),`第二天賣 ${x}+${c} = ${x+c} 個`);},
+  ()=>{const b=R(1000,5000),d=R(200,2000);const e=R(100,900);return nq(`一個數減去 ${d} 等於 ${b}，這個數再加上 ${e} 是多少？`,b+d+e,`先用加法還原：這個數 = ${b}+${d}`);},
+  ()=>{const A=R(2000,5000),B=A-2*R(100,900);return nq(`哥哥存了 ${A} 元，弟弟存了 ${B} 元。哥哥要給弟弟多少元，兩人的錢才會一樣多？`,(A-B)/2,'先算相差多少，再分一半給弟弟');},
+  ()=>{const a=R(1200,4000),b=R(1200,4000),c=R(500,a+b-100);return nq(big(`${a} + ${b} − ${c} = ?`),a+b-c,'由左往右一步一步算');},
+  ()=>{const t=R(3000,8000),x=R(800,t-1500),y=R(500,t-x-200);return nq(`圖書館有 ${t} 本書，借出 ${x} 本，又借出 ${y} 本，後來還回 ${R(1,1)*0+300} 本。現在圖書館有幾本書？`,t-x-y+300,'借出要減，還回要加');}],
+ [()=>{const a=R(1200,5000),b=R(1000,3000),w=P([3,4,6]),r=P([6,7,9].filter(v=>v!==w)),wrong=a+b-w+r;return nq(`${NM()}算 ${a} + □ 時，把 □ 個位的 ${w} 看成 ${r}，算出來是 ${wrong}。正確的答案是多少？`,wrong-(r-w),`看錯讓答案多了 ${r-w}，把它減回來`);},
+  ()=>{const s=R(1000,3000),d=R(100,800),A=s+d,tot=s+A;return nq(`爸爸和媽媽一共存了 ${tot} 元，爸爸比媽媽多 ${d} 元。媽媽存了多少元？`,s,`(${tot}−${d})÷2`);},
+  ()=>{const a=R(2,8)*1000,b=R(10,99)*10,c=R(100,900);return nq(`${NM()}帶 ${a} 元去買一臺 ${a-b-c} 元的腳踏車和一頂 ${c} 元的安全帽，還剩多少元？`,b,`${a} − ${a-b-c} − ${c}`);},
+  ()=>{const x=R(1000,3000),y=R(1000,3000),z=R(1000,3000);return nq(`甲、乙兩箱共 ${x+y} 顆，乙、丙兩箱共 ${y+z} 顆，甲、丙兩箱共 ${x+z} 顆。三箱一共有幾顆？`,x+y+z,'三個和加起來，每箱都被算了兩次，再除以 2');},
+  ()=>{const a=R(1000,4000),b=R(1000,4000);return nq(`□ − ${a} = ${b}，□ + ${a} = ?`,a+b+a,`先求 □ = ${a}+${b} = ${a+b}`);}]
+])},
 
-{id:'m3',unit:'第三單元',name:'毫米與數線',icon:'📏',gen(lv){
- if(lv===1){if(RND()<.5){const c=R(1,25);return nq(`<b>${c}</b> 公分 = ? 毫米`,c*10,'1 公分 = 10 毫米');}const c=R(2,30);return nq(`<b>${c*10}</b> 毫米 = ? 公分`,c,'10 毫米 = 1 公分');}
- if(lv===2){const t=R(1,3),c=R(1,15),m=R(1,9);
-  if(t===1)return nq(`<b>${c}</b> 公分 <b>${m}</b> 毫米 = ? 毫米`,c*10+m,`${c} 公分是 ${c*10} 毫米，再加 ${m} 毫米`);
-  if(t===2)return nq(`<b>${c*10+m}</b> 毫米 = ? 公分 ${m} 毫米`,c,'每 10 毫米換成 1 公分');
-  const x=(c*10+m)+P([-3,-1,0,2,5]);return cmpq(`<b>${c} 公分 ${m} 毫米</b> ○ <b>${x}</b> 毫米`,c*10+m,x,'先把公分換成毫米再比較');}
- const t=R(1,3);
- if(t===1){const c1=R(2,9),m1=R(1,9),c2=R(1,6),m2=R(1,9);return nq(`<b>${c1} 公分 ${m1} 毫米 + ${c2} 公分 ${m2} 毫米</b><br>= ? 毫米`,c1*10+m1+c2*10+m2,'全部換成毫米再相加');}
- if(t===2){const s=P([1,10,100]),st=s*R(12,60),k=R(2,9),right=RND()<.6;return nq(`數線上每一小格代表 <b>${s}</b>，從 <b>${st}</b> 往${right?'右':'左'}走 <b>${k}</b> 格，是多少？`,right?st+s*k:st-s*k,`往右變大、往左變小；每格 ${s}，${k} 格是 ${s*k}`);}
- const c=R(8,15),m=R(1,9),u=R(2,6),v=R(1,9);return nq(`一條緞帶長 <b>${c} 公分 ${m} 毫米</b>，剪掉 <b>${u} 公分 ${v} 毫米</b>，還剩幾毫米？`,c*10+m-u*10-v,'都換成毫米再相減');}},
+{id:'m3',name:'毫米與長度',icon:'📏',gen:tpl([
+ [()=>{const c=R(2,30),m=R(1,9);return nq(`<b>${c} 公分 ${m} 毫米</b> = ? 毫米`,c*10+m,'1 公分 = 10 毫米');},
+  ()=>{const x=R(21,299);return RND()<.5?nq(`<b>${x} 毫米</b> = ? 公分 ${x%10} 毫米`,Math.floor(x/10),'每 10 毫米換 1 公分'):nq(`<b>${x} 毫米</b> = ${Math.floor(x/10)} 公分 ? 毫米`,x%10,'');},
+  ()=>{const c=R(3,20),m=R(1,9),A=c*10+m,B=P([c*10+m*10,c+m,A+P([1,-1,9])]);return cmpq(`<b>${c} 公分 ${m} 毫米</b> ○ <b>${B} 毫米</b>`,A,B,'先換成毫米');},
+  ()=>{const vals=shuf([R(40,99),R(4,9)*10+R(1,9),R(100,150)]);const show=[`${vals[0]} 毫米`,`${Math.floor(vals[1]/10)} 公分 ${vals[1]%10} 毫米`,`${Math.floor(vals[2]/10)} 公分 ${vals[2]%10} 毫米`];const mx=Math.max(...vals);return mc('下面哪一個最長？',show[vals.indexOf(mx)],show.filter((_,i)=>vals[i]!==mx),'都換成毫米再比',{lo:1});}],
+ [()=>{const c1=R(3,12),m1=R(5,9),c2=R(2,9),m2=R(10-m1,9),tot=(c1+c2)*10+m1+m2;return mc(`<b>${c1} 公分 ${m1} 毫米 + ${c2} 公分 ${m2} 毫米</b> = ?`,`${Math.floor(tot/10)} 公分 ${tot%10} 毫米`,[`${c1+c2} 公分 ${(m1+m2)%10} 毫米`,`${Math.floor(tot/10)+1} 公分 ${tot%10} 毫米`,`${Math.floor(tot/10)} 公分 ${(tot%10+1)%10} 毫米`],'毫米相加超過 10 要進位');},
+  ()=>{const c1=R(8,20),m1=R(0,4),c2=R(2,c1-3),m2=R(m1+1,9);return nq(`<b>${c1} 公分 ${m1} 毫米 − ${c2} 公分 ${m2} 毫米</b> = ? 毫米`,(c1*10+m1)-(c2*10+m2),'毫米不夠減，向公分借 1（= 10 毫米）');},
+  ()=>{const st=P([2,5]),start=R(2,6)*10,k=R(3,9),right=RND()<.6||start-st*k<0;return nq(`尺上每一小格是 ${st} 毫米。螞蟻從 ${start/10} 公分的地方往${right?'右':'左'}走 ${k} 小格，停在幾毫米的地方？`,right?start+st*k:start-st*k,`${start/10} 公分 = ${start} 毫米，走了 ${st}×${k} = ${st*k} 毫米`);},
+  ()=>{const L=R(12,19)*10+R(1,9),u=R(2,6),v=R(1,9);return nq(`一枝鉛筆長 ${Math.floor(L/10)} 公分 ${L%10} 毫米，用掉了 ${u} 公分 ${v} 毫米，還剩幾毫米？`,L-u*10-v,'全部換成毫米再相減');}],
+ [()=>{const n=P([2,3,4]),each=R(25,45),tot=n*each;return nq(`${n} 枝一樣長的蠟筆頭尾接起來，總長 ${Math.floor(tot/10)} 公分 ${tot%10} 毫米。一枝蠟筆長幾毫米？`,each,`先換成 ${tot} 毫米，再除以 ${n}`);},
+  ()=>{const a=R(60,120),b=R(60,120),ov=R(5,15);return nq(`兩段膠帶，一段長 ${a} 毫米，另一段長 ${Math.floor(b/10)} 公分 ${b%10} 毫米。把它們接在一起，中間重疊 ${ov} 毫米，接好後全長幾毫米？`,a+b-ov,'重疊的部分只能算一次，要減掉');},
+  ()=>{const st=R(2,6),n=R(4,9),r=R(1,9);return nq(`一條緞帶每 ${st} 公分剪一段，剪了 ${n} 段後還剩 ${r} 毫米。這條緞帶原本長幾毫米？`,st*10*n+r,`${n} 段共 ${st*n} 公分 = ${st*n*10} 毫米，再加剩下的`);},
+  ()=>{const a=R(6,12),b=R(5,9),c=R(2,4),d=R(1,b-1);return nq(`小明的鉛筆長 ${a} 公分 ${b} 毫米，比小美的鉛筆長 ${c} 公分 ${d} 毫米。小美的鉛筆長幾毫米？`,(a*10+b)-(c*10+d),'小美的 = 小明的 − 多出來的');}]
+])},
 
-{id:'m4',unit:'第四單元',name:'乘法',icon:'✖️',gen(lv){
- if(lv===1){const a=R(11,49),b=R(2,9);return RND()<.7?nq(big(`${a} × ${b} = ?`),a*b,`拆開算：${Math.floor(a/10)*10}×${b} 加上 ${a%10}×${b}`):nq(`<b>${a}</b> 的 <b>${b}</b> 倍是多少？`,a*b,`幾倍就是乘以幾：${a}×${b}`);}
- if(lv===2){const a=R(101,999),b=R(2,9);return nq(big(`${a} × ${b} = ?`),a*b,'用直式：個位、十位、百位分別乘，記得加上進位');}
- const t=R(1,3);
- if(t===1){const a=R(12,99),b=R(3,9),c=R(5,30);return nq(`每盒有 ${a} 顆糖，買了 ${b} 盒，店員又送 ${c} 顆，一共有幾顆？`,a*b+c,`先算 ${a}×${b}，再加上送的 ${c} 顆`);}
- if(t===2){const a=R(5,25)*10,b=R(2,6),tot=a*b,pay=Math.ceil((tot+1)/1000)*1000;return nq(`一張門票 ${a} 元，買 ${b} 張，付了 ${pay} 元，可以找回幾元？`,pay-tot,`先算 ${a}×${b}，再用 ${pay} 去減`);}
- const a=R(15,40),b=R(3,8),c=R(5,a);return nq(`操場上每排站 ${a} 人，站了 ${b} 排，後來走了 ${c} 人，還剩幾人？`,a*b-c,`先算全部 ${a}×${b}，再減走掉的`);}},
+{id:'m4',name:'乘法',icon:'✖️',gen:tpl([
+ [()=>{const a=R(23,98),b=R(3,9);return nq(big(`${a} × ${b} = ?`),a*b,'個位乘完要進位到十位');},
+  ()=>{const a=R(101,999),b=R(3,9);return nq(big(`${a} × ${b} = ?`),a*b,'個位、十位、百位分別乘，記得進位');},
+  ()=>{const a=R(1,9)*100+R(0,0)*10+R(1,9),b=R(3,9);return nq(big(`${a} × ${b} = ?`),a*b,'十位是 0 時，十位只寫進位的數');},
+  ()=>{const a=R(12,49),b=R(3,9);return nq(`${a} 的 ${b} 倍再加上 ${a}，是多少？`,a*(b+1),`其實就是 ${a} 的 ${b+1} 倍`);},
+  ()=>{const a=R(105,480),b=R(3,8);return nq(`一盒彩色筆 ${a} 元，老師買了 ${b} 盒，一共要付幾元？`,a*b,`${a}×${b}`);},
+  ()=>{const a=R(21,99),b=R(3,9),c=R(2,9);return mc(`${a} × ${b} 和 ${a} × ${c} 合起來，跟下面哪一個一樣？`,`${a} × ${b+c}`,[`${a} × ${b*c}`,`${a+a} × ${b+c}`,`${a} × ${b} × ${c}`],`${b} 個 ${a} 加 ${c} 個 ${a}，就是 ${b+c} 個 ${a}`);}],
+ [()=>{const a=R(15,60),x=R(5,9),y=R(2,x-1);return nq(`每盒有 ${a} 顆糖果，${x} 盒比 ${y} 盒多幾顆？`,a*(x-y),`多了 ${x-y} 盒，就是 ${a}×${x-y}`);},
+  ()=>{const p=R(120,380),n=R(2,4),q=R(45,95),m=R(2,5);return nq(`買 ${n} 件 ${p} 元的衣服和 ${m} 雙 ${q} 元的襪子，一共要付多少元？`,p*n+q*m,'分開算，再加起來');},
+  ()=>{const a=R(12,30),b=R(4,9),c=R(10,a*b-5);return nq(`每排有 ${a} 張椅子，排了 ${b} 排，有 ${c} 張椅子已經有人坐。還有幾張空椅子？`,a*b-c,'先算全部，再減掉');},
+  ()=>{const a=R(3,9),b=R(3,9);return nq(`□ × ${a} = ${a*b*10}<br>□ 是多少？`,b*10,`想 ${a}×? = ${a*b}，再補一個 0`);},
+  ()=>{const k=P([25,50,125]),m=k===125?8:4,x=R(2,9);return nq(big(`${k} × ${x} × ${m} = ?`),k*x*m,`先算 ${k}×${m} = ${k*m} 比較快`);}],
+ [()=>{let a,d,res;for(;;){a=R(1,9);d=R(3,9);const n=a*10+3;res=n*d;if(res>=100&&res<1000)break;}const s=String(res);return nq(`□3 × ${d} = ${s[0]}□${s[2]}，第一個 □ 是多少？`,a,`個位 3×${d} = ${3*d}，再推十位`);},
+  ()=>{const p=R(15,40),n=R(3,8),pay=Math.ceil((p*n+1)/100)*100;return nq(`一本筆記本 ${p} 元，買 ${n} 本，付了 ${pay} 元，可以找回多少元？`,pay-p*n,`${p}×${n} = ${p*n}`);},
+  ()=>{const w=R(4,9),d=R(2,4),k=R(12,25);return nq(`一週有 7 天。${NM()}每天跳繩 ${k} 下，${d} 週一共跳幾下？`,k*7*d,`先算一週 ${k}×7`);},
+  ()=>{const a=R(3,6),b=R(4,9),c=R(15,40);return nq(`一個箱子裝 ${a} 盒，一盒裝 ${b} 包，一包有 ${c} 顆。一箱共有幾顆？`,a*b*c,'一層一層乘');},
+  ()=>{const ad=R(150,300),ch=R(80,150),na=R(2,3),nc=R(1,4);return nq(`遊樂園門票大人 ${ad} 元、小孩 ${ch} 元。${na} 個大人和 ${nc} 個小孩，一共要多少元？`,ad*na+ch*nc,'大人和小孩分開算再加');}]
+])},
 
-{id:'m5',unit:'第五單元',name:'角與形狀',icon:'📐',gen(lv){
- if(lv===1){
-  if(RND()<.35){const ds=shuf([40,60,120,135,30,150]).slice(0,3),opts=shuf([90,...ds]);return {type:'mc',prompt:'哪一個是<b>直角</b>？',opts:opts.map(d=>angSVG(d)),optPic:1,ans:opts.indexOf(90),tip:'直角跟三角板、書本的角一樣大，常畫一個小方塊記號'};}
-  const b=P([['正方形有幾個直角？','4',['2','3','5'],'正方形四個角都是直角'],['長方形有幾個直角？','4',['1','2','3'],'長方形四個角都是直角'],['一個角有幾條邊？','2',['1','3','4'],'角由一個頂點和兩條邊組成'],['一個角有幾個頂點？','1',['2','3','4'],'角只有一個頂點'],['正方形的四條邊長度怎麼樣？','四條邊都一樣長',['只有兩條一樣長','四條邊都不一樣長'],'正方形四邊等長、四個角都是直角'],['長方形的對邊長度怎麼樣？','兩組對邊各自一樣長',['四條邊都一樣長','四條邊都不一樣長'],'長方形：上下一樣長、左右一樣長'],['書本封面的一個角是什麼角？','直角',['比直角小的角','比直角大的角'],'書本的角和三角板的直角一樣大']]);
-  return mc(b[0],b[1],b[2],b[3]);}
- if(lv===2){const t=R(1,3);
-  if(t===1){const h=P([1,2,3,4,5,7,8,9,10,11]);const a=(h===3||h===9)?'直角':((h<3||h>9)?'比直角小':'比直角大');return mc(`${h} 點整時，長針和短針形成的角是？`,a,['直角','比直角小','比直角大'],'拿三角板的直角去比比看；3 點和 9 點剛好是直角',{art:clockSVG(h)});}
-  if(t===2){const bg=P([100,120,135]),sm=P([35,45,60]);const o=shuf([[bg,30],[sm,62]]);return {type:'mc',prompt:'哪一個角<b>比較大</b>？',opts:o.map(x=>angSVG(x[0],x[1])),optPic:1,ans:o.findIndex(x=>x[0]===bg),tip:'角的大小看兩條邊「張開」多少，和邊畫多長沒有關係'};}
-  return mc('把角的兩條邊畫長一點，角會變大嗎？','不會，角的大小不變',['會，邊越長角越大','會變小'],'角的大小只看張開的程度');}
- const t=R(1,4);
- if(t===1){const a=R(3,15);return nq(`正方形每一邊長 <b>${a}</b> 公分，四條邊合起來是幾公分？`,a*4,`正方形四邊一樣長：${a}×4`);}
- if(t===2){const a=R(6,15),b=R(2,a-1);return nq(`長方形長 <b>${a}</b> 公分、寬 <b>${b}</b> 公分，四條邊合起來是幾公分？`,2*(a+b),`對邊一樣長：${a}+${b}+${a}+${b}`);}
- if(t===3){const p=R(1,4),q=R(1,4);return nq(`桌上有 ${p} 個正方形和 ${q} 個長方形，一共有幾個直角？`,4*(p+q),'正方形和長方形都各有 4 個直角');}
- const a=R(3,12);return nq(`用 <b>${a*4}</b> 公分的鐵絲剛好圍成一個正方形，每一邊是幾公分？`,a,`四邊一樣長：${a*4}÷4`);}},
+{id:'m5',name:'角與形狀',icon:'📐',gen:tpl([
+ [()=>{const ds=shuf([40,60,120,135,30,150]).slice(0,3),opts=shuf([90,...ds]);return {type:'mc',prompt:'哪一個是<b>直角</b>？',opts:opts.map(d=>angSVG(d)),optPic:1,ans:opts.indexOf(90),tip:'直角跟三角板的直角一樣大'};},
+  ()=>{const bg=P([100,120,135]),sm=P([35,45,60]);const o=shuf([[bg,30],[sm,62]]);return {type:'mc',prompt:'哪一個角<b>比較大</b>？',opts:o.map(x=>angSVG(x[0],x[1])),optPic:1,ans:o.findIndex(x=>x[0]===bg),tip:'角的大小看張開的程度，和邊畫多長沒有關係'};},
+  ()=>{const h=P([1,2,3,4,5,7,8,9,10,11]);const a=(h===3||h===9)?'直角':((h<3||h>9)?'比直角小':'比直角大');return mc(`${h} 點整時，長針和短針形成的角是？`,a,['直角','比直角小','比直角大'],'拿直角去比；3 點和 9 點剛好是直角',{art:clockSVG(h)});},
+  ()=>{const b=P([['正方形有幾個直角？','4',['2','3','5']],['一個長方形紙剪掉一個角（剪一刀）後，剩下的圖形有幾個角？','5',['3','4','6']],['三角板上有幾個直角？','1',['0','2','3']]]);return mc(b[0],b[1],b[2],'仔細畫畫看再數');}],
+ [()=>{const t=R(1,3);if(t===1){const a=R(5,15),b=R(2,a-1);return nmc(`長方形長 ${a} 公分、寬 ${b} 公分，四條邊合起來是幾公分？`,2*(a+b),[a+b,a*b,2*a+b],' 公分','對邊一樣長');}const a=R(3,15);return nmc(`用鐵絲圍成一個邊長 ${a} 公分的正方形，再把同一條鐵絲改圍成一個寬 ${Math.max(1,a-2)} 公分的長方形，長方形的長是幾公分？`,a+2,[a,a+1,2*a],' 公分',`鐵絲長 ${4*a} 公分，長方形的長 + 寬 = ${2*a}`);},
+  ()=>{const p=R(1,4),q=R(1,4),r=R(1,3);return nmc(`桌上有 ${p} 個正方形、${q} 個長方形和 ${r} 個三角板。一共有幾個直角？`,4*(p+q)+r,[4*(p+q),4*(p+q+r),4*(p+q)+2*r],' 個','三角板只有 1 個直角');},
+  ()=>{let hs,ang;do{hs=shuf([1,2,3,4,5,7,8,10,11]).slice(0,4);ang=hs.map(h=>Math.min(h,12-h));}while(ang.filter(x=>x===Math.max(...ang)).length>1);const best=hs[ang.indexOf(Math.max(...ang))];return mc('下面哪一個時刻，長針和短針形成的角最大？',`${best} 點整`,hs.filter(h=>h!==best).map(h=>`${h} 點整`),'整點時，越接近 6 點，兩針張開越大');}],
+ [()=>{const s=R(8,20),t=R(2,4),k=R(1,4);return nq(`一張邊長 ${s} 公分的正方形紙，在 ${k} 條邊的正中間各往內剪掉一個邊長 ${t} 公分的小正方形。剪完的紙周長是多少公分？`,4*s+2*t*k,`每個缺口多 2×${t} 公分`);},
+  ()=>{const L=R(10,20),W=R(6,L-2);return nq(`一張長 ${L} 公分、寬 ${W} 公分的長方形紙，從一個角剪掉一個小正方形。剪完的周長是多少公分？`,2*(L+W),'從角落剪掉正方形，周長不變');},
+  ()=>{const a=R(3,9),n=R(2,4);return nq(`把 ${n} 個邊長 ${a} 公分的正方形排成一排拼成長方形，長方形周長是幾公分？`,2*(a*n+a),`長方形長 ${a*n}、寬 ${a}`);}]
+])},
 
-{id:'m6',unit:'第六單元',name:'除法',icon:'➗',gen(lv){
- if(lv===1){const b=R(2,9),q=R(2,9),a=b*q;return RND()<.6?nq(big(`${a} ÷ ${b} = ?`),q,`想九九乘法：${b}×?=${a}`):nq(`${a} 顆糖平分給 ${b} 個人，每人分到幾顆？`,q,`平分 → 用除法：${a}÷${b}`);}
- if(lv===2){const b=R(2,9),q=R(2,9),r=R(1,b-1),a=b*q+r;const tip=`${b}×${q}=${b*q}，${a}−${b*q}=${r}；餘數要比除數小`;
-  if(RND()<.5)return nq(`${big(a+' ÷ '+b)}<br>商是多少？`,q,tip);return nq(`${big(a+' ÷ '+b)}<br>餘數是多少？`,r,tip);}
- const t=R(1,4),b=R(3,9),q=R(3,9),r=R(1,b-1),a=b*q+r;
- if(t===1)return nq(`一個數除以 <b>${b}</b>，商是 <b>${q}</b>，餘數是 <b>${r}</b>，這個數是多少？`,a,`被除數 = 除數 × 商 + 餘數：${b}×${q}+${r}`);
- if(t===2)return nq(`有 ${a} 人要搭車，每台車最多坐 ${b} 人，<b>至少</b>要幾台車？`,q+1,`${a}÷${b}=${q} 餘 ${r}，剩下的 ${r} 人也要坐車，所以再加 1 台`);
- if(t===3)return nq(`一條 ${a} 公尺的繩子，每 ${b} 公尺剪成一段，<b>最多</b>可以剪幾段？`,q,`${a}÷${b}=${q} 餘 ${r}，剩下的不夠一段`);
- const bb=R(2,6),qq=R(11,30);return nq(big(`${bb*qq} ÷ ${bb} = ?`),qq,'可以先分十位，再分個位');}},
+{id:'k6',name:'面積',icon:'🟦',gen:tpl([
+ [()=>{const r=R(3,9),c=R(3,9);return nq(`一張長方形卡片上放滿 1 平方公分的方格板，橫的一排有 ${c} 格，一共有 ${r} 排。卡片的面積是幾平方公分？`,r*c,`${c}×${r}`);},
+  ()=>{const a=[R(3,8),R(3,8)],b=[R(3,8),R(3,8)];let A=a[0]*a[1],B=b[0]*b[1];if(A===B){b[0]++;B=b[0]*b[1];}return mc(`甲卡片橫排 ${a[0]} 格、有 ${a[1]} 排；乙卡片橫排 ${b[0]} 格、有 ${b[1]} 排（每格 1 平方公分）。哪一張面積比較大？大多少？`,`${A>B?'甲':'乙'}比較大，大 ${Math.abs(A-B)} 平方公分`,[`${A>B?'乙':'甲'}比較大，大 ${Math.abs(A-B)} 平方公分`,`${A>B?'甲':'乙'}比較大，大 ${Math.abs(a[0]+a[1]-b[0]-b[1])||1} 平方公分`,'一樣大'],'面積 = 一排的格數 × 排數',{lo:1});},
+  ()=>{const b=P([['一張獎狀','600 平方公分',['60 平方公分','6 平方公分']],['一張便利貼','50 平方公分',['500 平方公分','5 平方公分']],['一張 1000 元鈔票','100 平方公分',['10 平方公分','1000 平方公分']],['一張悠遊卡','50 平方公分',['5 平方公分','500 平方公分']]]);return mc(`${b[0]}的面積大約是多少？`,b[1],b[2],'想像 1 平方公分大約是一個指甲那麼大');}],
+ [()=>{const r=R(4,9),c=R(4,9),h=R(2,6);return nq(`一塊長方形板子橫排 ${c} 格、直排 ${r} 格（每格 1 平方公分），中間挖掉 ${h} 格。剩下的面積是幾平方公分？`,r*c-h,`先算全部 ${c}×${r}，再減掉挖掉的`);},
+  ()=>{const c=R(3,9),r=R(3,9);return nq(`一張長方形卡片面積是 ${r*c} 平方公分，橫的一排放了 ${c} 個 1 平方公分的方格。一共有幾排？`,r,`${r*c}÷${c}`);},
+  ()=>{const a=R(3,7),b=R(3,7),c=R(2,5),d=R(2,5);return nq(`一個圖形由兩個長方形拼成：一個是 ${a} 格 × ${b} 格，另一個是 ${c} 格 × ${d} 格（每格 1 平方公分）。拼好的圖形面積是幾平方公分？`,a*b+c*d,'分成兩塊分別算再加起來');},
+  ()=>{const s=R(3,9);return nq(`用 1 平方公分的方格板排一個正方形，每邊排 ${s} 格。正方形的面積是幾平方公分？`,s*s,`${s}×${s}`);}],
+ [()=>{const n=P([12,16,18,20,24,30,36]);let c=0;for(let a=1;a*a<=n;a++)if(n%a===0)c++;return nq(`用 ${n} 個 1 平方公分的正方形，排成一個長方形（或正方形），每次都要全部用完。一共有幾種不同的排法？（橫排和直排交換算同一種）`,c,`找兩個數相乘等於 ${n}：1×${n}、2×${n/2}…`);},
+  ()=>{const a=R(5,9),b=R(5,9),c=R(2,Math.floor(a/2)),d=R(2,Math.floor(b/2));return nq(`一個 ${a} 格 × ${b} 格的長方形（每格 1 平方公分），從一個角剪掉一個 ${c} 格 × ${d} 格的長方形。剩下的面積比剪掉的多幾平方公分？`,a*b-2*c*d,`剩下 ${a*b-c*d}，剪掉 ${c*d}`);},
+  ()=>{const s=R(2,5),k=R(2,4);return nq(`一個正方形每邊 ${s} 格，面積是幾平方公分？如果每邊變成 ${s*k} 格，面積會變成原來的幾倍？（填倍數）`,k*k,`新面積 ${s*k}×${s*k}，原來 ${s}×${s}`);}]
+])},
 
-{id:'m7',unit:'第七單元',name:'公斤與公克',icon:'⚖️',gen(lv){
- if(lv===1){const t=R(1,3);
-  if(t===1){const k=R(1,9);return nq(`<b>${k}</b> 公斤 = ? 公克`,k*1000,'1 公斤 = 1000 公克');}
-  if(t===2){const k=R(2,9);return nq(`<b>${k*1000}</b> 公克 = ? 公斤`,k,'1000 公克 = 1 公斤');}
-  const b=P([['一顆雞蛋','60 公克',['60 公斤']],['一個裝滿書的書包','3 公斤',['3 公克']],['一顆大西瓜','5 公斤',['5 公克']],['一枝鉛筆','5 公克',['5 公斤']],['一個三年級學生','30 公斤',['30 公克']],['一顆蘋果','200 公克',['200 公斤']]]);
-  return mc(`${b[0]}大約有多重？`,b[1],b[2],'想一想拿在手上的感覺：輕的用公克，重的用公斤');}
- if(lv===2){const k=R(1,8),g=P([R(1,9)*100+R(1,99),R(10,99),R(101,999),P([5,8,50,80])]);
-  if(RND()<.5)return nq(`<b>${k}</b> 公斤 <b>${g}</b> 公克 = ? 公克`,k*1000+g,`${k} 公斤 = ${k*1000} 公克，再加 ${g}（注意 0 要補好位置）`);
-  return nq(`<b>${k*1000+g}</b> 公克 = ? 公斤 ${g} 公克`,k,'每 1000 公克換成 1 公斤');}
- const t=R(1,3),k=R(1,5),g=R(100,900);
- if(t===1){const g2=R(200,900);return nq(`<b>${k} 公斤 ${g} 公克 + ${g2} 公克</b> = ? 公克`,k*1000+g+g2,'先全部換成公克再相加');}
- if(t===2){const u=R(100,900);return nq(`一袋米重 <b>${k+1}</b> 公斤，煮飯用掉 <b>${u}</b> 公克，還剩幾公克？`,(k+1)*1000-u,`${k+1} 公斤 = ${(k+1)*1000} 公克，再減掉 ${u}`);}
- const x=k*1000+g+P([-50,-5,0,5,90]);return cmpq(`<b>${k} 公斤 ${g} 公克</b> ○ <b>${x}</b> 公克`,k*1000+g,x,'先換成相同單位再比較');}},
+{id:'m6',name:'除法',icon:'➗',gen:tpl([
+ [()=>{const b=R(3,9),q=R(3,9),r=R(1,b-1),a=b*q+r;return RND()<.5?nq(`${big(a+' ÷ '+b)}<br>商是多少？`,q,`${b}×${q} = ${b*q}`):nq(`${big(a+' ÷ '+b)}<br>餘數是多少？`,r,`${a}−${b*q} = ${r}，餘數要比除數小`);},
+  ()=>{const b=R(2,6),q=R(11,30);return nq(big(`${b*q} ÷ ${b} = ?`),q,'先分十位，再分個位');},
+  ()=>{const b=R(3,9),q=R(3,9),r=R(1,b-1);return nq(`□ ÷ ${b} = ${q} 餘 ${r}<br>□ 是多少？`,b*q+r,`被除數 = 除數×商+餘數`);},
+  ()=>{const b=R(4,9),q=R(4,9),r=R(1,b-1);return mc(`${b*q+r} ÷ ${b}，哪一個寫法是對的？`,`= ${q} 餘 ${r}`,[`= ${q-1} 餘 ${r+b}`,`= ${q+1} 餘 ${r}`,`= ${q} 餘 ${r+1}`],'餘數一定要比除數小');}],
+ [()=>{const b=R(4,9),q=R(4,12),r=R(1,b-1),a=b*q+r;return nq(`${a} 個人搭纜車，每臺最多坐 ${b} 人，<b>至少</b>要幾臺？`,q+1,`${a}÷${b} = ${q} 餘 ${r}，剩下的人也要坐`);},
+  ()=>{const b=R(4,9),q=R(4,12),r=R(1,b-1),a=b*q+r;return nq(`${a} 公尺的繩子，每 ${b} 公尺剪一段，<b>最多</b>可以剪幾段？`,q,`剩下 ${r} 公尺不夠一段`);},
+  ()=>{const b=R(3,8),q=R(5,12),r=R(1,b-1),a=b*q+r;return nq(`${a} 顆糖平分給 ${b} 個人，每人分得一樣多。最少還要再買幾顆，才能剛好分完？`,b-r,`${a}÷${b} = ${q} 餘 ${r}，補到 ${b} 的倍數`);},
+  ()=>{const p=R(3,9),k=R(12,25);return nq(`${p} 枝一樣價錢的鉛筆共 ${p*k} 元，買 ${p+2} 枝要多少元？`,k*(p+2),`先算一枝 ${p*k}÷${p}`);}],
+ [()=>{const b=R(4,9),q=R(3,9),r=R(1,b-1);return nq(`一個數除以 ${b}，商是 ${q}，餘數是 ${r}。這個數除以 ${b>5?b-2:b+2} 的商是多少？`,Math.floor((b*q+r)/(b>5?b-2:b+2)),`先還原這個數：${b}×${q}+${r} = ${b*q+r}`);},
+  ()=>{const d=R(4,7);let n;do{n=R(30,90);}while(n%d===0);return nq(`某天是星期一，從這天算起（這天是第 1 天）第 ${n} 天是星期幾？（星期日請填 7）`,((n-1)%7)+1,`每 7 天一循環：${n-1}÷7 看餘數`);},
+  ()=>{const g=R(4,8),k=R(3,9),extra=R(1,g-1);return nq(`老師把一些鉛筆平分給 ${g} 組，每組 ${k} 枝，還剩 ${extra} 枝。如果改成平分給 ${g+1} 組，每組最多可以分幾枝？`,Math.floor((g*k+extra)/(g+1)),`先算鉛筆總數 ${g*k+extra} 枝`);}]
+])},
 
-{id:'m8',unit:'第八單元',name:'分數',icon:'🍕',gen(lv){
- if(lv===1){const t=R(1,3),d=R(3,10),s=R(1,d-1);
-  if(t===1){const w=[fr(d-s,d),fr(s,d+1),fr(d,s)];if(d-1>s)w.push(fr(s,d-1));return mc('塗色的部分是全部的幾分之幾？',fr(s,d),w,`平分成 ${d} 份 → 分母是 ${d}；塗了 ${s} 份 → 分子是 ${s}`,{art:fracArt(d,s)});}
-  if(t===2){const food=P(['披薩','蛋糕','西瓜','蔥油餅']);return mc(`把一個${food}<b>平分</b>成 ${d} 塊，拿走 1 塊，拿走的是幾分之幾？`,fr(1,d),[fr(d,1),fr(1,d+1),fr(1,d-1)],`平分成幾份，分母就是幾`);}
-  return RND()<.5?nq(`${fr(s,d)} 的<b>分母</b>是多少？`,d,'分數線下面的是分母，上面的是分子'):nq(`${fr(s,d)} 的<b>分子</b>是多少？`,s,'分數線上面的是分子，下面的是分母');}
- if(lv===2){const t=R(1,3);
-  if(t===1){let a=R(2,9),b=R(2,9);if(RND()<.85)while(b===a)b=R(2,9);return cmpq(`${fr(1,a)} ○ ${fr(1,b)}`,1/a,1/b,'分子都是 1 時，分母越大，每一份越小');}
-  if(t===2){const d=R(4,12);let a=R(1,d-1),b=R(1,d-1);return cmpq(`${fr(a,d)} ○ ${fr(b,d)}`,a,b,'分母一樣時，分子越大，分數越大');}
-  const d=R(3,12),s=R(2,d-1);return nq(`${fr(s,d)} 是幾個 ${fr(1,d)}？`,s,`${fr(s,d)} 就是 ${s} 個 ${fr(1,d)}`);}
- const t=R(1,3);
- if(t===1){const d=R(3,12),s=R(2,d-1);return mc(`<b>${s}</b> 個 ${fr(1,d)} 是多少？`,fr(s,d),[fr(1,d*s),fr(d,s),fr(s,d+s)],`${s} 個 ${fr(1,d)} 合起來，分母不變，分子是 ${s}`);}
- if(t===2){const d=R(2,10);return nq(`1 = ${fr('?',d)}，? 是多少？`,d,`把 1 個整體平分成 ${d} 份，${d} 份合起來就是 1`);}
- const d=R(5,12),a=R(1,d-2),b=R(1,d-1-a);return mc(`${fr(a,d)} + ${fr(b,d)} = ?`,fr(a+b,d),[fr(a+b,d+d),fr(a*b||1,d),fr(a+b+1,d)],'分母一樣時，分母不變，分子相加');}},
+{id:'m7',name:'公斤與公克',icon:'⚖️',gen:bigSmallGen('公斤','公克',{bigA:'一個大西瓜重',smallA:'一個小西瓜重',diffQ:'大西瓜比小西瓜重幾公克？',most:'最重',
+ t3:(c,n,m)=>`一包砂糖重 ${c} 公克，${NM()}買了 ${n} 包，又買了 ${m} 公克的散裝糖。一共買了幾公克的糖？`,
+ t31:(X,n,c)=>`一袋麵粉有 ${X}，做蛋糕用了 ${n} 次，每次用 ${c} 公克。還剩下幾公克？`,
+ t32:(a,n)=>`${a} 公斤的米平分裝成 ${n} 袋，每袋是幾公克？`,
+ t33:L=>`三個包裹分別重 ${L[0]}、${L[1]}、${L[2]}。三個合起來是幾公克？`,
+ t34:(X,p)=>`有 ${X} 的綠豆，每 ${p} 公克裝成一袋，最多可以裝滿幾袋？`})},
+{id:'k8',name:'公升和毫升',icon:'🥛',gen:bigSmallGen('公升','毫升',{bigA:'一瓶大瓶綠茶是',smallA:'一瓶小瓶綠茶是',diffQ:'大瓶比小瓶多幾毫升？',most:'最多',
+ t3:(c,n,m)=>`一杯杏仁茶是 ${c} 毫升，${NM()}喝了 ${n} 杯又 ${m} 毫升。一共喝了幾毫升？`,
+ t31:(X,n,c)=>`水壺裡有 ${X} 的水，倒出 ${n} 次，每次 ${c} 毫升。還剩下幾毫升？`,
+ t32:(a,n)=>`${a} 公升的果汁平分倒成 ${n} 杯，每杯是幾毫升？`,
+ t33:L=>`一瓶優酪乳是 ${L[0]}，一瓶鮮奶是 ${L[1]}，一瓶豆漿是 ${L[2]}。三瓶合起來是幾毫升？`,
+ t34:(X,p)=>`有 ${X} 的綠茶，每 ${p} 毫升倒一杯，最多可以倒滿幾杯？`})},
 
-{id:'m9',unit:'第九單元',name:'列表與規律',icon:'🧩',gen(lv){
- if(lv===1){const s=R(1,30),st=R(2,9);const a=[0,1,2,3].map(i=>s+st*i);return nq(`${big(a.join(', ')+', ?')}<br>下一個數是多少？`,s+st*4,`每次都多 ${st}`);}
- if(lv===2){const t=R(1,3);
-  if(t===1){const st=P([10,20,25,50,100]),s=st*R(1,5);const a=[0,1,2].map(i=>s+st*i),n=R(6,8);return nq(`${big(a.join(', ')+', …')}<br>照這樣排下去，第 <b>${n}</b> 個數是多少？`,s+st*(n-1),`每次多 ${st}，第 ${n} 個 = 第 1 個 + ${st}×${n-1}`);}
-  if(t===2){const st=R(3,12),s=st*R(8,15)+R(0,5);const a=[0,1,2,3].map(i=>s-st*i);return nq(`${big(a.join(', ')+', ?')}<br>下一個數是多少？`,s-st*4,`每次都少 ${st}`);}
-  const s=R(5,40),st=R(3,9);const a=[0,1,2,3,4].map(i=>s+st*i),k=R(1,3),ans=a[k];a[k]='?';return nq(`${big(a.join(', '))}<br>? 是多少？`,ans,`先找出每次差多少（${st}）`);}
- const t=R(1,3);
- if(t===1){const f=R(3,6),st=R(2,5),n=R(5,8);return nq(`排火柴：第 1 個圖形用 ${f} 根，第 2 個用 ${f+st} 根，第 3 個用 ${f+2*st} 根。照這樣排下去，第 <b>${n}</b> 個圖形要用幾根？`,f+st*(n-1),`每多一個圖形就多 ${st} 根，可以列表一個一個寫`);}
- if(t===2){const a=R(4,12),k=R(6,9);return nq(`1 盒有 ${a} 個布丁：<br>1 盒 ${a} 個、2 盒 ${a*2} 個、3 盒 ${a*3} 個……<br><b>${k}</b> 盒有幾個？`,a*k,`每多 1 盒多 ${a} 個，也就是 ${a}×${k}`);}
- const sym=shuf(['🔴','🔺','🟦','⭐','💚']).slice(0,R(3,4)),n=R(11,30);return mc(`${sym.concat(sym).join('')}……<br>照這樣排，第 <b>${n}</b> 個是什麼？`,sym[(n-1)%sym.length],sym,`每 ${sym.length} 個一組重複，${n}÷${sym.length} 看餘數`,{bigOpts:1});}}
+{id:'m8',name:'分數',icon:'🍕',gen:tpl([
+ [()=>{const d=R(3,10),s=R(1,d-1);return mc('塗色的部分是全部的幾分之幾？',fr(s,d),[fr(d-s,d),fr(s,d+1),fr(d,s)],`平分成 ${d} 份，塗了 ${s} 份`,{art:fracArt(d,s)});},
+  ()=>{const d=R(5,12),s=R(1,d-4);const a=[0,1,2,3].map(i=>fr(s+i,d));const k=R(1,2),ans=fr(s+k,d);a[k]=fr('?',d);return mc(`照順序排：${a.join(' → ')}<br>? 應該是哪一個？`,ans,[fr(s+k,d+1),fr(s+k+1,d),fr(s,d+k)],'分母不變，分子一個一個多 1');},
+  ()=>{const d=R(4,12);let a=R(1,d),b=R(1,d);return cmpq(`${fr(a,d)} ○ ${fr(b,d)}`,a,b,'分母一樣，比分子');},
+  ()=>{let a=R(2,9),b=R(2,9);while(b===a)b=R(2,9);return cmpq(`${fr(1,a)} ○ ${fr(1,b)}`,1/a,1/b,'分子都是 1，分母越大每份越小');},
+  ()=>{const d=R(3,10);return nq(`${fr(d,d)} 個蛋糕就是幾個蛋糕？`,1,'分子和分母一樣，就是 1 個整體');}],
+ [()=>{const n=R(6,12),k=R(1,n-1);return mc(`一盒布丁有 ${n} 個，${NM()}分到 ${k} 個，是分到幾盒布丁？`,fr(k,n),[fr(k,n+k),fr(n,k),fr(n-k,n)],`一盒 ${n} 個，${k} 個就是 ${fr(k,n)} 盒`);},
+  ()=>{const d=R(4,8),k=R(2,d-1);return nq(`一個蔥油餅平分切成 ${d} 片，爸爸吃了 ${fr(k,d)} 個蔥油餅，是吃了幾片？`,k,`${fr(k,d)} 就是 ${k} 片`);},
+  ()=>{const a=R(1,5),b=R(1,5),c=R(1,5),d=8;const vals=[a,b,c];if(new Set(vals).size<3)vals[2]=6;const ns=['弟弟','哥哥','爸爸'],mx=Math.max(...vals);return mc(`一瓶汽水平分倒成 ${d} 杯。弟弟喝了 ${fr(vals[0],d)} 瓶，哥哥喝了 ${vals[1]} 杯，爸爸喝了 ${fr(vals[2],d)} 瓶。誰喝得最多？`,ns[vals.indexOf(mx)],ns.filter((_,i)=>vals[i]!==mx).concat(['一樣多']),`都換成杯數：${fr(1,d)} 瓶 = 1 杯`);},
+  ()=>{const k=R(2,10),m=R(1,11);if(k===m)return nq('一打鉛筆有幾枝？',12,'一打 = 12');return mc(`一打鉛筆有 12 枝。倩怡分到 ${fr(k,12)} 打，詩欣分到 ${m} 枝。誰分到的比較多？`,k>m?'倩怡':'詩欣',[k>m?'詩欣':'倩怡','一樣多','不能比較'],`${fr(k,12)} 打就是 ${k} 枝`);}],
+ [()=>{const n=P([6,8,10,12]),a=R(1,3),b=R(1,n-a-1);return nq(`一盒蛋塔有 ${n} 個，爸爸吃了 ${a} 個，哥哥吃了 ${fr(b,n)} 盒，剩下的都給弟弟。弟弟吃了 ${fr('?',n)} 盒，? 是多少？`,n-a-b,`哥哥吃了 ${b} 個`);},
+  ()=>{const d=R(5,10),a=R(1,d-2),b=R(1,d-a-1);return nq(`一條蜂蜜蛋糕，哥哥吃了 ${fr(a,d)} 條，姊姊吃了 ${fr(b,d)} 條。兩人比剩下的多吃了幾分之幾條？分母是 ${d}，分子是多少？（如果不比剩下的多，填 0）`,Math.max(0,(a+b)-(d-a-b)),`吃了 ${a+b} 份，剩下 ${d-a-b} 份`);},
+  ()=>{const d=R(3,6),k=R(2,6),m=R(2,d);return nq(`一條 ${d*k} 公分的緞帶平分成 ${d} 段，${fr(m,d)} 條是幾公分？`,m*k,`一段 ${k} 公分`);},
+  ()=>{const d=R(4,9),a=R(1,d-1);return nq(`${fr(a,d)} 再加上幾個 ${fr(1,d)} 就是 1 個整體？`,d-a,`1 = ${fr(d,d)}`);}]
+])},
+
+{id:'m9',name:'列表與規律',icon:'🧩',gen:tpl([
+ [()=>{const s=R(3,40),st=R(3,12);const a=[0,1,2,3].map(i=>s+st*i);return nq(`${big(a.join(', ')+', ?')}<br>下一個數是多少？`,s+st*4,`每次多 ${st}`);},
+  ()=>{const st=R(4,15),s=st*R(8,15)+R(0,5);const a=[0,1,2,3].map(i=>s-st*i);return nq(`${big(a.join(', ')+', ?')}<br>下一個數是多少？`,s-st*4,`每次少 ${st}`);},
+  ()=>{const s=R(2,30),st=R(3,9);const a=[0,1,2,3,4].map(i=>s+st*i),k=R(1,3),ans=a[k];a[k]='□';return nq(`□ 裡要填多少？<br>${big(a.join(', '))}`,ans,`前後相差 ${st}`);},
+  ()=>{const s=R(1,5);const a=[s,s+1,s+3,s+6,s+10];return nq(`${big(a.join(', ')+', ?')}<br>下一個數是多少？`,s+15,'相差 1、2、3、4…每次多 1');}],
+ [()=>{const st=P([15,25,50,125]),s=st*R(1,4),n=R(8,12);return nq(`${big([0,1,2].map(i=>s+st*i).join(', ')+', …')}<br>第 ${n} 個數是多少？`,s+st*(n-1),`第 ${n} 個 = 第 1 個 + ${st}×${n-1}`);},
+  ()=>{const a=R(2,5),r=R(2,3);const arr=[a,a*r,a*r*r];return nq(`${big(arr.join(', ')+', ?')}<br>下一個數是多少？`,a*r*r*r,`每次都乘 ${r}`);},
+  ()=>{const x=R(2,6),y=R(5,9);const arr=[x,y,x+2,y+2,x+4,y+4];return nq(`${big(arr.slice(0,5).join(', ')+', ?')}<br>下一個數是多少？`,y+4,'單數位置和雙數位置分開看');},
+  ()=>{const sym=shuf(['🔴','🔺','🟦','⭐','💚']).slice(0,R(3,4)),n=R(25,60);return mc(`${sym.concat(sym).join('')}……<br>照這樣排，第 ${n} 個是什麼？`,sym[(n-1)%sym.length],sym,`每 ${sym.length} 個一組，看 ${n}÷${sym.length} 的餘數`,{bigOpts:1});}],
+ [()=>{const f=R(3,6),st=R(2,5),n=R(10,20);return nq(`排火柴：第 1 個圖形用 ${f} 根，第 2 個用 ${f+st} 根，第 3 個用 ${f+2*st} 根。第 ${n} 個要用幾根？`,f+st*(n-1),`每多一個圖形多 ${st} 根`);},
+  ()=>{const f=R(3,6),st=R(2,5),tot=R(40,90);const n=Math.floor((tot-f)/st)+1;return nq(`排火柴：第 1 個圖形用 ${f} 根，之後每個圖形都比前一個多 ${st} 根。有 ${tot} 根火柴，最多可以排到第幾個圖形？`,n,`第 n 個要 ${f}+${st}×(n−1) 根，不能超過 ${tot}`);},
+  ()=>{const t=R(2,4),c=R(4,8);return nq(`一張桌子坐 ${c} 人。把桌子一張接一張排成一長排，相接的地方各少坐 ${t>2?2:2} 人（每接一次少 2 人）。排 ${t+3} 張桌子可以坐幾人？`,c*(t+3)-2*(t+2),`${t+3} 張桌子接了 ${t+2} 次`);},
+  ()=>{const s=R(1,5),d=R(2,4),n=R(5,8);let sum=0;for(let i=0;i<n;i++)sum+=s+d*i;return nq(`第 1 天存 ${s} 元，之後每天比前一天多存 ${d} 元。${n} 天一共存了幾元？`,sum,'用列表一天一天寫出來再加');}]
+])}
 ];
-
+// 版本：翰林／康軒（單元順序與名稱）
+const VERSIONS={
+ hanlin:{name:'翰林',units:[['m1','第一單元','10000以內的數'],['m2','第二單元','10000以內的加減'],['m3','第三單元','毫米與數線'],['m4','第四單元','乘法'],['m5','第五單元','角與形狀'],['m6','第六單元','除法'],['m7','第七單元','公斤與公克'],['m8','第八單元','分數'],['m9','第九單元','列表與規律']]},
+ kangxuan:{name:'康軒',units:[['m1','第一單元','10000以內的數'],['m2','第二單元','四位數的加減'],['m3','第三單元','毫米'],['m4','第四單元','乘法'],['m5','第五單元','角'],['k6','第六單元','面積'],['m6','第七單元','除法'],['k8','第八單元','公升和毫升'],['m8','第九單元','分數']]}
+};
 
 // ---------- 卓越盃素養題型（原創，依題型隨機出題）----------
 const NAMES=['小明','小美','阿傑','芷晴','宇翔','奇奇','妙妙','樂樂','亦喬','哲宇'];
@@ -673,7 +747,12 @@ const WORLD={
   {name:'🗼 時態塔 Tenses',desc:'看時間線索（now、yesterday、tomorrow）選時態',nodes:GRAM.filter(x=>x.tense).map(x=>({id:x.id,name:x.name,icon:x.icon,kind:'gram',gen:lv=>gramGen(x.bank,lv)}))}],
   boss:{need:25,name:'英文大魔王',icon:'🐲'}}
 };
+WORLD.math.zones[0].nodes=MATH;
 const NODE={};for(const w in WORLD)WORLD[w].zones.forEach(z=>z.nodes.forEach(n=>{n.w=w;NODE[n.id]=n;}));
+let CURVER='hanlin';
+const curV=()=>VERSIONS[CURVER]||VERSIONS.hanlin;
+function zonesOf(w){if(w!=='math')return WORLD[w].zones;const V=curV();return [{name:`🏰 ${V.name}版 三年級上學期`,desc:'每個單元都有 Lv1 基礎、Lv2 進階、Lv3 挑戰',nodes:V.units.map(u=>NODE[u[0]])},WORLD.math.zones[1]];}
+function nInfo(n){const u=curV().units.find(x=>x[0]===n.id);return u?{unit:u[1],name:u[2]}:{unit:n.unit||'',name:n.name};}
 const LVDESC={comp:['基礎題（選擇）','挑戰題（選擇）','進階題（填答）'],math:['基礎','進階','應用挑戰'],voc:['看圖選字','聽音・字義','拼字挑戰'],gram:['基礎選擇','進階選擇','排句子挑戰']};
 //#GEN-END
 // ================= 基本設定 =================
@@ -725,7 +804,7 @@ function roll(tier){const w=RW[tier]||RW.n;let x=Math.random()*100,ri=0;while(ri
  const pool=TREASURES.filter(t=>t.r===rar);return {kind:'tre',id:pool[Math.floor(Math.random()*pool.length)].id,rar};}
 
 // ================= 玩家資料 =================
-function defPlayer(){return {id:'',name:'',pet:'cat',pin:'',xp:0,stars:{},stats:{},wrong:[],stickers:[],daily:{date:'',done:0,correct:0,math:0,eng:0,claimed:[]},streak:0,best:0,lastDay:'',days:0,arcadeBest:0,total:0,mute:false,items:{lamp:1,shield:1,hourglass:0,scroll:0},treasures:{},equip:'',chests:['n'],buff:{},chDone:{},av:0,rev:0,at:0};}
+function defPlayer(){return {id:'',name:'',pet:'cat',pin:'',xp:0,stars:{},stats:{},wrong:[],stickers:[],daily:{date:'',done:0,correct:0,math:0,eng:0,claimed:[]},streak:0,best:0,lastDay:'',days:0,arcadeBest:0,total:0,mute:false,items:{lamp:1,shield:1,hourglass:0,scroll:0},treasures:{},equip:'',chests:['n'],buff:{},chDone:{},av:0,ver:'hanlin',rev:0,at:0};}
 function fixPlayer(p){const d=defPlayer();p=Object.assign(d,clone(p||{}));p.items=Object.assign({lamp:0,shield:0,hourglass:0,scroll:0},p.items||{});p.treasures=p.treasures||{};p.buff=p.buff||{};p.chDone=p.chDone||{};p.chests=Array.isArray(p.chests)?p.chests:[];p.wrong=(Array.isArray(p.wrong)?p.wrong:[]).filter(w=>w&&w.seed!=null&&NODE[w.node]);p.daily=Object.assign({date:'',done:0,correct:0,math:0,eng:0,claimed:[]},p.daily||{});if(!Array.isArray(p.daily.claimed))p.daily.claimed=[];if(!PETS[p.pet])p.pet='cat';return p;}
 let S=null;
 const Store={mode:'loading',players:{},challenges:{},results:{},feed:[],note:''};
@@ -739,7 +818,7 @@ const today=()=>dstr(new Date()),yest=()=>{const d=new Date();d.setDate(d.getDat
 const streakOf=p=>(p.lastDay===today()||p.lastDay===yest())?(+p.streak||0):0;
 const nst=id=>(S&&S.stars[id])||[0,0,0];
 const starsOf=p=>Object.entries(p.stars||{}).filter(([k])=>NODE[k]).reduce((a,[,v])=>a+(Array.isArray(v)?v.reduce((x,y)=>x+(+y||0),0):0),0);
-const worldStars=w=>WORLD[w].zones.reduce((a,z)=>a+z.nodes.reduce((b,n)=>b+nst(n.id).reduce((x,y)=>x+y,0),0),0);
+const worldStars=w=>zonesOf(w).reduce((a,z)=>a+z.nodes.reduce((b,n)=>b+nst(n.id).reduce((x,y)=>x+y,0),0),0);
 const starStr=n=>'⭐'.repeat(n)+'<span style="filter:grayscale(1);opacity:.3">'+'⭐'.repeat(3-n)+'</span>';
 function ensureDaily(){if(S.daily.date!==today()){S.daily={date:today(),done:0,correct:0,math:0,eng:0,claimed:[]};return true;}return false;}
 function touchDay(){const t=today();if(S.lastDay!==t){S.streak=S.lastDay===yest()?S.streak+1:1;S.lastDay=t;S.days++;S.best=Math.max(S.best,S.streak);}}
@@ -855,14 +934,15 @@ function picker(){VIEW='picker';S=null;clearArc();const ps=Object.values(Store.p
 ${old?'<div style="text-align:center;margin-top:16px"><button class="btn gh sm" onclick="importOld()">📥 匯入這台裝置之前的單人紀錄</button></div>':''}</div>`);}
 function choose(id){const p=Store.players[id];if(!p)return;if(p.pin){modal(`<h3>${petIcon(p)} ${esc(p.name)}</h3><p>請輸入密碼</p><input class="txt" id="pinin" inputmode="numeric" maxlength="4" style="margin-bottom:12px"><div class="row" style="justify-content:flex-end"><button class="btn gh" onclick="closeModal()">取消</button><button class="btn" onclick="checkPin('${sid(id)}')">進入</button></div>`);setTimeout(()=>{const e=$('#pinin');if(e)e.focus();},50);return;}select(id);}
 function checkPin(id){const p=Store.players[id],e=$('#pinin');if(p&&e&&e.value===String(p.pin)){closeModal();select(id);}else if(e){e.value='';e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');}}
-function select(id){S=fixPlayer(Store.players[id]);lsSet(MEKEY,S.id);home();}
+function select(id){S=fixPlayer(Store.players[id]);CURVER=S.ver||'hanlin';lsSet(MEKEY,S.id);home();}
 function importOld(){try{const o=JSON.parse(lsGet(OLDKEY));if(!o||!o.name)return toast('找不到舊紀錄');S=fixPlayer(Object.assign(o,{id:uid('p'),wrong:[],pin:'',chests:['n'],items:{lamp:1,shield:1,hourglass:0,scroll:0}}));save();lsSet('kq_migrated','1');lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');home();}catch(e){toast('匯入失敗');}}
 
-let PICK=null,EDITING=false;
-function onboard(edit){EDITING=!!edit&&!!S;PICK=EDITING?S.pet:null;PENDING_AV=undefined;VIEW='onboard';
+let PICK=null,EDITING=false,PVER='hanlin';
+function onboard(edit){EDITING=!!edit&&!!S;PICK=EDITING?S.pet:null;PVER=EDITING?(S.ver||'hanlin'):'hanlin';PENDING_AV=undefined;VIEW='onboard';
  h(`<div class="wrap"><div class="hero"><div style="font-size:60px">⚔️</div><h1>${EDITING?'修改角色':'新增小勇士'}</h1></div>
 <div class="card"><h3>你叫什麼名字？</h3><input class="txt" id="nm" maxlength="10" placeholder="輸入名字" value="${EDITING?esc(S.name):''}" style="margin:10px 0 16px">
 <h3>選一隻夥伴陪你練功</h3><div class="pets">${Object.entries(PETS).map(([k,p])=>`<button class="petc ${PICK===k?'sel':''}" id="pc-${k}" onclick="pickPet('${k}')"><span>${p.s[0]}</span>${p.n}<div style="font-size:18px">${p.s.slice(1).join('')}</div></button>`).join('')}</div>
+<h3>數學課本版本</h3><div class="chips" id="verpick" style="margin:8px 0 16px">${Object.entries(VERSIONS).map(([k,v])=>`<button class="chip ${(EDITING?S.ver:PVER)===k?'act':''}" onclick="PVER='${k}';document.querySelectorAll('#verpick .chip').forEach(e=>e.classList.remove('act'));this.classList.add('act')">${v.name}版</button>`).join('')}</div>
 <h3>頭貼照片（可不放）</h3><div class="row" style="margin:10px 0 6px;flex-wrap:wrap"><span id="avprev">${EDITING?face(S,'xl'):'<span class="face emo xl">📷</span>'}</span><label class="btn gh sm" style="cursor:pointer">📷 選照片／拍照<input type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"></label><button class="btn gh sm" onclick="clearPhoto()">不用照片</button></div><p class="muted" style="margin:0 0 16px;font-size:14px">會縮成小小的圓形頭貼，排行榜和廣場會顯示。只有拿到家庭通關密語的人看得到。</p>
 <h3>密碼（可不填）</h3><p class="muted" style="margin:4px 0 8px;font-size:14px">設 4 位數字，別人就不能用你的角色練習</p><input class="txt" id="pin" inputmode="numeric" maxlength="4" placeholder="例如 1234" value="${EDITING?esc(S.pin):''}" style="margin-bottom:16px">
 <div class="row"><button class="btn gh" onclick="${EDITING?'home()':'picker()'}">取消</button><button class="btn or" style="flex:1" onclick="startGame()">${EDITING?'儲存':'開始冒險 ➜'}</button></div></div>
@@ -872,8 +952,8 @@ function startGame(){const n=$('#nm').value.trim(),pin=$('#pin').value.trim();
  if(!n){$('#nm').focus();$('#nm').classList.add('shake');setTimeout(()=>$('#nm').classList.remove('shake'),400);return;}
  if(pin&&!/^\d{4}$/.test(pin))return toast('密碼要是 4 位數字，或是不填');
  if(!PICK)return okModal('請先選一隻夥伴喔！');
- if(EDITING){S.name=n;S.pet=PICK;S.pin=pin;if(PENDING_AV!==undefined)S.av=setAvatarFor(S.id,PENDING_AV);save();toast('已儲存');return home();}
- S=fixPlayer(defPlayer());S.id=uid('p');S.name=n;S.pet=PICK;S.pin=pin;if(PENDING_AV)S.av=setAvatarFor(S.id,PENDING_AV);save();lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');sfx('win');home();}
+ if(EDITING){S.name=n;S.pet=PICK;S.pin=pin;S.ver=PVER;CURVER=PVER;if(PENDING_AV!==undefined)S.av=setAvatarFor(S.id,PENDING_AV);save();toast('已儲存');return home();}
+ S=fixPlayer(defPlayer());S.id=uid('p');S.name=n;S.pet=PICK;S.pin=pin;S.ver=PVER;CURVER=PVER;if(PENDING_AV)S.av=setAvatarFor(S.id,PENDING_AV);save();lsSet(MEKEY,S.id);addFeed('🎉','加入了練功坊！');sfx('win');home();}
 
 // ================= 首頁 =================
 const MISSIONS=[{id:'a',t:'完成 3 個關卡',need:3,get:d=>d.done},{id:'b',t:'答對 30 題',need:30,get:d=>d.correct},{id:'c',t:'數學和英文各玩 1 關',need:2,get:d=>(d.math>0?1:0)+(d.eng>0?1:0)},{id:'d',t:'完成上面三個任務',need:3,get:d=>['a','b','c'].filter(x=>d.claimed.includes(x)).length,chest:1}];
@@ -887,7 +967,7 @@ function home(){if(!S)return picker();VIEW='home';if(ensureDaily())save();clearA
  h(`<div class="wrap">${topBar()}
 <div class="chips"><span class="chip">🔥 連續 ${streakOf(S)} 天</span><span class="chip">⭐ ${ms+es}</span><span class="chip">🏅 ${S.stickers.length}</span>${S.buff.double?'<span class="chip act">📜 雙倍經驗準備中</span>':''}<button class="chip" onclick="S.mute=!S.mute;save();home()">${S.mute?'🔇':'🔊'}</button><button class="chip" onclick="picker()">👥 換人</button></div>
 ${ban}
-<div class="worlds"><button class="world m" onclick="world('math')"><div class="ic">🏰</div><b>數字王國</b><small>翰林三上・卓越盃題型<br>⭐ ${ms} / ${WORLD.math.zones.reduce((a,z)=>a+z.nodes.length,0)*9}</small></button><button class="world e" onclick="world('eng')"><div class="ic">🌳</div><b>英語森林</b><small>單字・文法・時態<br>⭐ ${es} / ${emax}</small></button></div>
+<div class="worlds"><button class="world m" onclick="world('math')"><div class="ic">🏰</div><b>數字王國</b><small>${curV().name}三上・卓越盃題型<br>⭐ ${ms} / ${zonesOf('math').reduce((a,z)=>a+z.nodes.length,0)*9}</small></button><button class="world e" onclick="world('eng')"><div class="ic">🌳</div><b>英語森林</b><small>單字・文法・時態<br>⭐ ${es} / ${emax}</small></button></div>
 <div class="card"><h3>📅 今日任務</h3>${mis}</div>
 <div class="tools"><button class="tool" onclick="plaza()"><span>🏆</span>排行榜・廣場${pend.length+clm.length?`<i class="badge">${pend.length+clm.length}</i>`:''}</button><button class="tool" onclick="bag()"><span>🎒</span>法寶袋${S.chests.length?`<i class="badge">${S.chests.length}</i>`:''}</button><button class="tool" onclick="arcade()"><span>⚡</span>九九快打</button><button class="tool" onclick="review()"><span>📦</span>錯題寶箱${S.wrong.length?`<i class="badge">${S.wrong.length}</i>`:''}</button><button class="tool" onclick="stickers()"><span>🏅</span>貼紙簿</button><button class="tool" onclick="parentGate()"><span>👨‍👩‍👧</span>家長區</button></div>
 <div style="text-align:center;margin-top:14px">${modeBadge()}</div></div>`);}
@@ -895,12 +975,12 @@ function claim(id){ensureDaily();const m=MISSIONS.find(x=>x.id===id);if(!m||S.da
  if(m.chest){giveChest('n');toast('🎁 得到一個寶箱！');}else{const msgs=[];gainXP(30,msgs);if(msgs.length)toast(msgs[0]);}save();sfx('win');home();}
 
 // ================= 世界地圖 =================
-function world(w){VIEW='world';const W=WORLD[w],ws=worldStars(w),bossOpen=ws>=W.boss.need,bst=(S.stars['boss-'+w]||[0])[0];
- const zones=W.zones.map(z=>`<div class="zone"><h3>${z.name}</h3><p class="muted">${z.desc}</p><div class="nodes">${z.nodes.map(n=>{const st=nst(n.id),tot=st[0]+st[1]+st[2];return `<button class="node" onclick="pickLv('${n.id}')"><div class="ic">${n.icon}</div>${n.unit?`<small>${n.unit}</small>`:''}<b>${n.name}</b><div class="lvrow">${st.map((s,i)=>`<span class="lvp ${s?'on':''}">L${i+1} ${s?'★'.repeat(s):(i===0||st[i-1]>=2?'○':'🔒')}</span>`).join('')}</div>${tot===9?'<small>🏅 全部完成</small>':''}</button>`;}).join('')}</div></div>`).join('');
+function world(w){VIEW='world';const W=WORLD[w],ZS=zonesOf(w),ws=worldStars(w),bossOpen=ws>=W.boss.need,bst=(S.stars['boss-'+w]||[0])[0];
+ const zones=ZS.map(z=>`<div class="zone"><h3>${z.name}</h3><p class="muted">${z.desc}</p><div class="nodes">${z.nodes.map(n=>{const st=nst(n.id),tot=st[0]+st[1]+st[2];return `<button class="node" onclick="pickLv('${n.id}')"><div class="ic">${n.icon}</div>${nInfo(n).unit?`<small>${nInfo(n).unit}</small>`:''}<b>${nInfo(n).name}</b><div class="lvrow">${st.map((s,i)=>`<span class="lvp ${s?'on':''}">L${i+1} ${s?'★'.repeat(s):(i===0||st[i-1]>=2?'○':'🔒')}</span>`).join('')}</div>${tot===9?'<small>🏅 全部完成</small>':''}</button>`;}).join('')}</div></div>`).join('');
  h(`<div class="wrap"><div class="row" style="justify-content:space-between"><button class="btn gh sm" onclick="home()">← 回家</button><h2>${W.icon} ${W.name}</h2><span class="chip">⭐ ${ws}</span></div>${zones}
 <div class="zone"><h3>⚔️ 魔王關</h3><div class="nodes"><button class="node boss ${bossOpen?'':'lock'}" onclick="${bossOpen?`startBoss('${w}')`:`okModal('還沒解鎖喔！','在${W.name}收集 ${W.boss.need} 顆星就能挑戰魔王（目前 ${ws} 顆）。')`}"><div class="ic">${W.boss.icon}</div><b>${W.boss.name}</b><small>${bossOpen?`混合複習 12 題・打倒可得 2 個魔王寶箱・最佳 ${'★'.repeat(bst)||'尚未挑戰'}`:`🔒 收集 ${W.boss.need} 顆星解鎖（${ws}/${W.boss.need}）`}</small></button></div></div></div>`);}
 function pickLv(id){const n=NODE[id],st=nst(id),d=LVDESC[n.kind||'math'];
- modal(`<div class="row"><div style="font-size:44px">${n.icon}</div><div><small class="muted">${n.unit||''}</small><h2>${n.name}</h2></div></div>
+ modal(`<div class="row"><div style="font-size:44px">${n.icon}</div><div><small class="muted">${nInfo(n).unit}</small><h2>${nInfo(n).name}</h2></div></div>
  ${[1,2,3].map(lv=>{const open=lv===1||st[lv-2]>=2;return `<button class="lvl" ${open?'':'disabled'} onclick="closeModal();startStage('${id}',${lv})"><span class="n">Lv${lv}</span><span class="d"><b>${d[lv-1]}</b><br><span class="muted">${open?'8 題・3 顆星必得寶箱':`Lv${lv-1} 拿到 2 顆星解鎖`}</span></span><span class="s">${open?starStr(st[lv-1]):'🔒'}</span></button>`;}).join('')}
  <div style="text-align:right;margin-top:14px"><button class="btn gh sm" onclick="closeModal()">關閉</button></div>`);}
 
@@ -908,10 +988,11 @@ function pickLv(id){const n=NODE[id],st=nst(id),d=LVDESC[n.kind||'math'];
 let PL=null;
 const qKey=q=>[q.prompt,q.pic,q.listen,q.art,q.zh,q.ans,(q.opts||[]).length].join('|');
 function genQ(node,lv,seed){const q=withSeed(seed,()=>NODE[node].gen(lv));q.node=node;q.lv=lv;q.seed=seed;q.k=node+'|'+lv+'|'+seed;return q;}
-function makeQs(pickNode,lv,n,base){const out=[],seen=new Set();for(let g=0;g<300&&out.length<n;g++){const node=pickNode(g);const q=genQ(node,lv,(base+g*7919)%2147483647);const k=node+qKey(q);if(seen.has(k)&&g<250)continue;seen.add(k);out.push(q);}return out;}
+const shapeKey=q=>q.en||q.pic||q.listen?'':q.type+'|'+String(q.prompt).replace(/<[^>]+>/g,'').replace(/[0-9]+/g,'#').replace(/小明|小美|阿傑|芷晴|宇翔|奇奇|妙妙|樂樂|亦喬|哲宇|羽涵|倩怡/g,'@').slice(0,40);
+function makeQs(pickNode,lv,n,base){const out=[],seen=new Set(),shapes={};for(let g=0;g<300&&out.length<n;g++){const node=pickNode(g);const q=genQ(node,lv,(base+g*7919)%2147483647);const k=node+qKey(q);if(seen.has(k)&&g<250)continue;const sh=shapeKey(q);if(sh&&(shapes[sh]||0)>=2&&g<250)continue;seen.add(k);if(sh)shapes[sh]=(shapes[sh]||0)+1;out.push(q);}return out;}
 const blank=()=>({i:0,tries:0,pts:0,firstOk:0,combo:0,maxCombo:0,xp:0,cleared:0,buf:'',built:[],locked:false,shield:false,lampUsed:false});
 function startStage(id,lv){if(!NODE[id])return;const nd=NODE[id];PL=Object.assign(blank(),{mode:'stage',node:id,lv,world:nd.w,qs:makeQs(()=>id,lv,8,rseed())});renderQ();}
-function startBoss(w){let pool=[];WORLD[w].zones.forEach(z=>z.nodes.forEach(n=>{if(nst(n.id)[0]>=1)pool.push(n);}));if(pool.length<2)pool=WORLD[w].zones.flatMap(z=>z.nodes);
+function startBoss(w){let pool=[];zonesOf(w).forEach(z=>z.nodes.forEach(n=>{if(nst(n.id)[0]>=1)pool.push(n);}));if(pool.length<2)pool=zonesOf(w).flatMap(z=>z.nodes);
  PL=Object.assign(blank(),{mode:'boss',world:w,qs:makeQs(()=>pool[Math.floor(Math.random()*pool.length)].id,2,12,rseed())});renderQ();}
 function review(){if(!S.wrong.length)return okModal('📦 錯題寶箱是空的！','答錯的題目會自動收進來，之後在這裡複習。答對就會從寶箱移除。');
  PL=Object.assign(blank(),{mode:'review',qs:shuf(S.wrong).slice(0,8).map(w=>genQ(w.node,w.lv,w.seed))});renderQ();}
@@ -1037,7 +1118,7 @@ const claimableForMe=()=>S?myChs().filter(c=>chParts(c).includes(S.id)&&chRes(c,
 function chTable(c){const st=chState(c);return `<table>${st.parts.map(pid=>{const r=chRes(c,pid);const win=st.final&&st.winners.includes(pid);return `<tr><td>${win?'<span class="crown">👑</span> ':''}${esc(pname(pid))}</td><td>${r?(c.kind==='arcade'?`答對 ${+r.count||0} 題`:`${+r.pts||0} 分・一次答對 ${+r.firstOk||0}/${+r.n||8}・${fmtMs(+r.ms||0)}`):(st.expired?'沒有應戰':'⏳ 還沒應戰')}</td></tr>`;}).join('')}</table>`;}
 function newChallenge(target){target=sid(target);const others=Object.values(allPlayers()).filter(p=>p&&p.id&&p.name&&p.id!==S.id);
  if(!others.length)return okModal('還沒有其他小勇士','請在選角畫面「新增小勇士」，就可以互相挑戰囉！');
- const opts=w=>WORLD[w].zones.flatMap(z=>z.nodes).map(n=>`<option value="${n.id}">${n.icon} ${n.name}</option>`).join('');
+ const opts=w=>zonesOf(w).flatMap(z=>z.nodes).map(n=>`<option value="${n.id}">${n.icon} ${nInfo(n).name}</option>`).join('');
  modal(`<h2>⚔️ 發起挑戰</h2><p class="lbl">要挑戰誰？（可以選很多人）</p><div class="chips" id="opp" style="margin:0">${others.map(p=>`<label class="chip"><input type="checkbox" value="${sid(p.id)}" ${p.id===target||(!target&&others.length===1)?'checked':''}> ${petIcon(p)} ${esc(p.name)}</label>`).join('')}</div>
  <p class="lbl">比什麼？</p><select id="chk" class="sel" onchange="$('#chlv').style.display=this.value==='arcade'?'none':''"><option value="arcade">⚡ 九九快打（60 秒）</option><optgroup label="🏰 數學">${opts('math')}</optgroup><optgroup label="🌳 英文">${opts('eng')}</optgroup></select>
  <div id="chlv" style="display:none"><p class="lbl">難度</p><select id="chl" class="sel"><option value="1">Lv1</option><option value="2" selected>Lv2</option><option value="3">Lv3</option></select></div>
@@ -1107,7 +1188,7 @@ function equip(id){if(!S.treasures[id])return;S.equip=id;save();sfx('tap');bag()
 function useScroll(){if(S.items.scroll<1||S.buff.double)return;S.items.scroll--;S.buff.double=true;save();toast('📜 下一關的經驗值會變兩倍！');bag();}
 
 // ================= 貼紙簿 =================
-function stickers(){VIEW='stickers';const all=[...WORLD.math.zones.flatMap(z=>z.nodes.map(n=>[n.id,n.icon,n.name])),...WORLD.eng.zones.flatMap(z=>z.nodes.map(n=>[n.id,n.icon,n.name])),['boss-math','🏆','數學大魔王'],['boss-eng','🏆','英文大魔王']];
+function stickers(){VIEW='stickers';const all=[...zonesOf('math').flatMap(z=>z.nodes.map(n=>[n.id,n.icon,nInfo(n).name])),...WORLD.eng.zones.flatMap(z=>z.nodes.map(n=>[n.id,n.icon,n.name])),['boss-math','🏆','數學大魔王'],['boss-eng','🏆','英文大魔王']];
  h(`<div class="wrap"><div class="row" style="justify-content:space-between"><button class="btn gh sm" onclick="home()">← 回家</button><h2>🏅 貼紙簿</h2><span class="chip">${S.stickers.length} / ${all.length}</span></div>
 <p class="muted" style="font-weight:600">每個關卡的 Lv3 拿到 3 顆星，就能得到那一關的貼紙；打倒魔王（2 顆星以上）得到獎盃。</p>
 <div class="stk">${all.map(([id,ic,nm])=>{const has=S.stickers.includes(id);return `<div class="${has?'':'no'}"><span>${ic}</span>${has?nm:'？？？'}</div>`;}).join('')}</div></div>`);}
@@ -1116,19 +1197,19 @@ function stickers(){VIEW='stickers';const all=[...WORLD.math.zones.flatMap(z=>z.
 let GATE=0;
 function parentGate(){const a=R(12,19),b=R(12,19);GATE=a*b;modal(`<h3>👨‍👩‍👧 家長區</h3><p>請家長算一下：<b>${a} × ${b} = ?</b></p><input class="txt" id="gate" inputmode="numeric" style="margin-bottom:12px"><div class="row" style="justify-content:flex-end"><button class="btn gh" onclick="closeModal()">取消</button><button class="btn" onclick="if(+$('#gate').value===GATE){closeModal();parent();}else{$('#gate').value='';$('#gate').classList.add('shake');}">進入</button></div>`);setTimeout(()=>{const e=$('#gate');if(e)e.focus();},50);}
 function parent(pid){VIEW='parent';const ps=allPlayers();pid=sid(pid);if(!pid||!ps[pid])pid=S.id;const K=fixPlayer(ps[pid]);const rows=[];
- for(const w of ['math','eng'])WORLD[w].zones.forEach(z=>z.nodes.forEach(n=>{const s=K.stats[n.id]||{n:0,c:0},st=Array.isArray(K.stars[n.id])?K.stars[n.id]:[0,0,0];rows.push({w,n,s,acc:s.n?s.c/s.n:null,stars:st.reduce((a,b)=>a+(+b||0),0)});}));
+ for(const w of ['math','eng'])zonesOf(w).forEach(z=>z.nodes.forEach(n=>{const s=K.stats[n.id]||{n:0,c:0},st=Array.isArray(K.stars[n.id])?K.stars[n.id]:[0,0,0];rows.push({w,n,s,acc:s.n?s.c/s.n:null,stars:st.reduce((a,b)=>a+(+b||0),0)});}));
  const weak=rows.filter(r=>r.s.n>=6).sort((a,b)=>a.acc-b.acc).slice(0,3).filter(r=>r.acc<.8);
  const bar=a=>a===null?'<span class="muted">尚未練習</span>':`<b style="color:${a>=.8?'var(--grd)':a>=.6?'#C98A00':'var(--rd)'}">${Math.round(a*100)}%</b>`;
- const table=w=>`<table><tr><th>單元</th><th>答題</th><th>一次答對率</th><th>星星</th></tr>${rows.filter(r=>r.w===w).map(r=>`<tr><td>${r.n.icon} ${r.n.name}</td><td>${r.s.n}</td><td>${bar(r.acc)}</td><td>${r.stars}/9</td></tr>`).join('')}</table>`;
+ const table=w=>`<table><tr><th>單元</th><th>答題</th><th>一次答對率</th><th>星星</th></tr>${rows.filter(r=>r.w===w).map(r=>`<tr><td>${r.n.icon} ${nInfo(r.n).name}</td><td>${r.s.n}</td><td>${bar(r.acc)}</td><td>${r.stars}/9</td></tr>`).join('')}</table>`;
  const L=lvInfo(K.xp);
  h(`<div class="wrap"><div class="row" style="justify-content:space-between"><button class="btn gh sm" onclick="home()">← 回家</button><h2>👨‍👩‍👧 家長區</h2><span></span></div>
 <div class="chips">${Object.values(ps).filter(p=>p&&p.id&&p.name).map(p=>`<button class="chip ${p.id===pid?'act':''}" onclick="parent('${sid(p.id)}')">${petIcon(p)} ${esc(p.name)}</button>`).join('')}</div>
 <div class="card"><h3>📊 ${esc(K.name)} 的學習概況</h3><div class="chips"><span class="chip">Lv.${L.l}</span><span class="chip">練習 ${K.days} 天</span><span class="chip">最長連續 ${K.best} 天</span><span class="chip">共答 ${K.total} 題</span><span class="chip">錯題 ${K.wrong.length} 題</span><span class="chip">九九快打最佳 ${K.arcadeBest}</span><span class="chip">法寶 ${Object.keys(K.treasures).filter(k=>TRE[k]).length}/${TREASURES.length}</span></div>
 ${weak.length?`<div class="msg">需要多練習：${weak.map(r=>`${r.n.icon} ${r.n.name}（${Math.round(r.acc*100)}%）`).join('、')}</div>`:'<p class="muted">每個單元至少答 6 題後，這裡會列出最需要加強的單元。</p>'}</div>
-<div class="card" style="margin-top:14px"><h3>🏰 數學（翰林三上＋卓越盃題型）</h3>${table('math')}</div>
+<div class="card" style="margin-top:14px"><h3>🏰 數學（${curV().name}三上＋卓越盃題型）</h3>${table('math')}</div>
 <div class="card" style="margin-top:14px"><h3>🌳 英文</h3>${table('eng')}</div>
 <div class="card" style="margin-top:14px;font-size:15px"><h3>⚙️ 管理 ${esc(K.name)}</h3>
-<div class="row" style="flex-wrap:wrap">${pid===S.id?'<button class="btn gh sm" onclick="onboard(true)">改名字／夥伴／密碼</button>':''}${K.pin&&pid!==S.id?`<button class="btn gh sm" onclick="clearPin('${pid}')">清除密碼</button>`:''}${K.av?`<button class="btn gh sm" onclick="removeAv('${pid}')">移除頭貼</button>`:''}${pid!==S.id?`<button class="btn rd sm" onclick="askDel('${pid}')">刪除這個角色</button>`:'<span class="muted" style="font-size:14px">要刪除目前的角色，請先「換人」再到家長區刪除。</span>'}</div>
+<div class="row" style="flex-wrap:wrap">${pid===S.id?'<button class="btn gh sm" onclick="onboard(true)">改名字／夥伴／課本版本／密碼</button>':''}${K.pin&&pid!==S.id?`<button class="btn gh sm" onclick="clearPin('${pid}')">清除密碼</button>`:''}${K.av?`<button class="btn gh sm" onclick="removeAv('${pid}')">移除頭貼</button>`:''}${pid!==S.id?`<button class="btn rd sm" onclick="askDel('${pid}')">刪除這個角色</button>`:'<span class="muted" style="font-size:14px">要刪除目前的角色，請先「換人」再到家長區刪除。</span>'}</div>
 <p class="muted" style="margin-bottom:0">密碼只是防止孩子誤用別人的角色，不是安全保護。</p></div>
 <div class="card" style="margin-top:14px;font-size:15px"><h3>🔗 ${Store.mode==='cloud'?'給孩子的專屬連結':'雲端同步'}</h3>${Store.mode==='cloud'?`<p class="muted">用這個連結或 QR code 打開，就不用再輸入家庭通關密語。請只給自己的孩子。</p><div id="qr" style="display:flex;justify-content:center;margin:10px 0"></div><input class="txt" id="kidlink" readonly value="${esc(kidLink())}" style="font-size:14px"><div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyLink()">複製連結</button><button class="btn gh sm" onclick="lsSet(CODEKEY,'');boot()">更換通關密語</button><button class="btn gh sm" onclick="useLocal()">改成單機模式</button></div>`:`<p class="muted">目前是單機模式。${API_URL.startsWith('__')?'這個網站還沒設定雲端。':'要和其他孩子同步，請改回雲端模式。'}</p>${API_URL.startsWith('__')?'':'<button class="btn sm" onclick="lsSet(\'kq_localonly\',\'\');boot()">改回雲端模式</button>'}`}</p></div></div>`);if(Store.mode==='cloud')drawQR();}
 
