@@ -1248,7 +1248,7 @@ document.addEventListener('keydown',e=>{if($('#ov')||$('#lock'))return;const f=$
 
 // ================= 使用時間與休息 =================
 const CFGID='zzcfg';
-const LIMDEF={on:true,session:20,rest:10,daily:60,from:6,to:21};
+const LIMDEF={on:true,session:20,rest:10,daily:60,from:6,to:22};
 const famCfg=()=>Store.players[CFGID]||{};
 const lim=()=>Object.assign({},LIMDEF,famCfg().limits||{});
 function tl(){if(!S.tl||S.tl.date!==today())S.tl={date:today(),used:0,sess:S.tl?S.tl.sess||0:0,last:S.tl?S.tl.last||0:0,restUntil:S.tl?S.tl.restUntil||0:0,bonus:0,unlim:false,warned:false};return S.tl;}
