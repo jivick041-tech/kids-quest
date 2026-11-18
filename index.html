@@ -893,8 +893,22 @@ function clearPhoto(){PENDING_AV='';$('#avprev').innerHTML=`<span class="face em
 let AC;
 function sfx(k){if(S&&S.mute)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const n=AC.currentTime;const seq={ok:[[660,.08],[880,.14]],bad:[[260,.12],[200,.16]],up:[[523,.1],[659,.1],[784,.1],[1047,.25]],tap:[[520,.03]],win:[[784,.1],[988,.1],[1175,.2]]}[k];let t=0;seq.forEach(([f,d])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=k==='bad'?'triangle':'sine';o.frequency.value=f;gg.gain.setValueAtTime(.16,n+t);gg.gain.exponentialRampToValueAtTime(.001,n+t+d);o.connect(gg).connect(AC.destination);o.start(n+t);o.stop(n+t+d+.02);t+=d;});}catch(e){}}
 const canSpeak='speechSynthesis' in window;
-function say(text){if(!canSpeak||!text)return;try{const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.85;const vs=speechSynthesis.getVoices();const v=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
-if(canSpeak){try{speechSynthesis.getVoices();}catch(e){}}
+let VOICES=[],SPOKE=false,SPEAK_UNLOCKED=false;
+function loadVoices(){try{VOICES=speechSynthesis.getVoices()||[];}catch(e){VOICES=[];}}
+function pickVoice(){if(!VOICES.length)loadVoices();const en=VOICES.filter(v=>/^en/i.test(v.lang));return en.find(v=>/en[-_]US/i.test(v.lang)&&/google|samantha|natural|aria|jenny|zira/i.test(v.name))||en.find(v=>/en[-_]US/i.test(v.lang))||en[0]||null;}
+if(canSpeak){loadVoices();try{speechSynthesis.addEventListener('voiceschanged',loadVoices);}catch(e){}}
+// iPhone／iPad：第一次發音必須在手指點擊當下觸發，先用一個無聲的發音「解鎖」
+function unlockSpeech(){if(!canSpeak||SPEAK_UNLOCKED)return;SPEAK_UNLOCKED=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+document.addEventListener('pointerdown',unlockSpeech,true);document.addEventListener('keydown',unlockSpeech,true);
+let SAY_TIMER=null;
+function say(text,manual){if(!text)return;if(!canSpeak){if(manual)toast('這個瀏覽器不支援發音，請點「看單字」');return;}
+ try{unlockSpeech();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.85;u.volume=1;const v=pickVoice();if(v)u.voice=v;
+  let started=false;u.onstart=()=>{started=true;SPOKE=true;};
+  if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+  try{speechSynthesis.resume();}catch(e){}
+  speechSynthesis.speak(u);
+  clearTimeout(SAY_TIMER);SAY_TIMER=setTimeout(()=>{if(!started&&manual)toast('沒有播出聲音：請確認音量、靜音開關，或點「看單字」');},2500);
+ }catch(e){if(manual)toast('沒有播出聲音，請點「看單字」');}}
 
 // ================= 共用 UI =================
 let VIEW='',KEEP=false;
@@ -1006,10 +1020,10 @@ function renderQ(){const p=PL,q=p.qs[p.i];p.tries=0;p.buf='';p.built=[];p.locked
  let c=`<div class="card qcard" id="qc">`;
  if(q.art)c+=`<div>${q.art}</div>`;
  if(q.pic)c+=`<div>${picHTML(q.pic)}</div>`;
- if(q.listen)c+=`<div><button class="say big" onclick="say(PL.qs[PL.i].listen)">🔊 再聽一次</button></div>`;
+ if(q.listen)c+=`<div><button class="say big" onclick="say(PL.qs[PL.i].listen,1)">🔊 點我聽</button><button class="say" id="peek" onclick="this.outerHTML='<span class=&quot;sent&quot; style=&quot;display:block;margin-top:6px&quot;>'+esc(PL.qs[PL.i].listen)+'</span>'">👀 聽不到？看單字</button></div>`;
  c+=`<div class="${q.long?'long':''}">${q.prompt}</div>`;
  if(q.zh&&(q.type==='order'||q.type==='spell'||q.showZh))c+=`<div class="zh">${q.zh}</div>`;
- if(q.type==='spell')c+=`<button class="say" onclick="say(PL.qs[PL.i].say)">🔊 聽發音</button>`;
+ if(q.type==='spell')c+=`<button class="say" onclick="say(PL.qs[PL.i].say,1)">🔊 聽發音</button>`;
  c+='<div id="hint"></div></div>';
  let a='';
  if(q.type==='mc')a=`<div class="opts ${q.cmp?'cmp':''} ${q.lo?'one':''}">${q.opts.map((o,i)=>`<button class="opt ${q.optPic||q.bigOpts?'pico':''}" id="o${i}" onclick="pickOpt(${i})"${q.engOpts?' style="font-family:\'Baloo 2\'"':''}>${o}</button>`).join('')}</div>`;
@@ -1017,7 +1031,7 @@ function renderQ(){const p=PL,q=p.qs[p.i];p.tries=0;p.buf='';p.built=[];p.locked
  else a=`<div class="disp" id="disp"></div><div class="tiles" id="tiles"></div><div class="row" style="justify-content:center;margin-top:16px"><button class="btn gh" onclick="tileClear()">↺ 重來</button><button class="btn gr" onclick="tileOk()">✔ 確定</button></div>`;
  h(`<div class="wrap"><div class="phead"><button class="btn gh sm" onclick="quit()">✕</button><div class="prog"><i style="width:${p.i/p.qs.length*100}%"></i></div><span class="combo">${p.combo>=2?'🔥x'+p.combo:''}</span></div><div class="row" style="justify-content:space-between;flex-wrap:wrap;margin-top:6px"><span class="muted" style="font-weight:700">${label}・第 ${p.i+1} / ${p.qs.length} 題</span><span class="chips" id="items" style="margin:0">${itemsHTML()}</span></div>${c}${a}<div class="spacer"></div></div>`);
  if(q.type==='spell'||q.type==='order')drawTiles();
- if(q.listen)setTimeout(()=>say(q.listen),200);}
+ if(q.listen&&SPEAK_UNLOCKED)say(q.listen);}
 function useLamp(){const p=PL,q=p.qs[p.i];if(!p||p.locked||$('#fb')||p.lampUsed||S.items.lamp<1||p.mode==='challenge')return;p.lampUsed=true;S.items.lamp--;save();let removed=0;
  if(q.type==='mc'){const w=q.opts.map((o,i)=>i).filter(i=>i!==q.ans&&!$('#o'+i).classList.contains('no'));shuf(w).slice(0,Math.min(2,w.length-1)).forEach(i=>{$('#o'+i).classList.add('no');removed++;});}
  if(!removed){let t=q.tip;if(!t){if(q.type==='num')t=`答案是 ${String(q.ans).length} 位數`;else if(q.type==='spell')t=`第一個字母是 ${q.ans[0]}`;else if(q.type==='order')t=`第一個字是 ${q.ans.split(' ')[0]}`;else t='仔細再讀一次題目';}$('#hint').innerHTML=`<div class="hint">💡 ${t}</div>`;}
