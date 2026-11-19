@@ -204,9 +204,9 @@ label.chip{cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .qcard .long{text-align:left;font-size:19px;line-height:1.75;font-weight:600}
 .opts.one{grid-template-columns:1fr}.opts.one .opt{font-size:18px;text-align:left;min-height:52px;padding:10px 14px}
 @media (max-width:480px){.qcard .long{font-size:17px}}
-.lock{position:fixed;inset:0;z-index:85;background:linear-gradient(160deg,#2B2A4C,#4C3F91);color:#fff;display:grid;place-items:center;text-align:center;padding:24px;overflow:auto}
-.lock h1{font-size:28px;margin:8px 0}.lock .big{font-size:72px;font-weight:800;font-family:'Baloo 2';margin:6px 0}
-.lock .tip{background:rgba(255,255,255,.14);border-radius:16px;padding:12px 18px;font-size:20px;margin:12px auto;max-width:420px}
+.restlock{position:fixed;inset:0;z-index:85;background:linear-gradient(160deg,#2B2A4C,#4C3F91);color:#fff;display:grid;place-items:center;text-align:center;padding:24px;overflow:auto}
+.restlock h1{font-size:28px;margin:8px 0}.restlock .big{font-size:72px;font-weight:800;font-family:'Baloo 2';margin:6px 0}
+.restlock .tip{background:rgba(255,255,255,.14);border-radius:16px;padding:12px 18px;font-size:20px;margin:12px auto;max-width:420px}
 </style>
 </head>
 <body>
@@ -741,11 +741,225 @@ function gramGen(bank,lv){
  if(lv===3&&RND()<.5){const words=sent.split(/\s+/);if(words.length>=3&&words.length<=7&&!/[.?!]\s/.test(sent)){let sc,guard=0;do{sc=shuf(words);guard++;}while(sc.join(' ')===sent&&guard<20);return {type:'order',prompt:'把單字排成正確的句子',zh:it.z,words:sc,ans:sent,tip:it.t,say:sent,en:1};}}
  const opts=shuf(it.o);return {type:'mc',prompt:`<div class="sent">${it.s.replace('___','<span class="blank">___</span>')}</div>`,opts,ans:opts.indexOf(it.a),tip:it.t,zh:it.z,say:sent,en:1,engOpts:1,showZh:lv===1};}
 
+
+// ---------- Grammar Friends 3（依單元文法重點自編題目）----------
+const GF3=[
+{id:'gf0',name:'Starter 比較級・was/were',icon:'👪',bank:[
+ g('My brother is ___ than me.',['tall','taller','tallest'],'taller','我哥哥比我高。','兩個人比較：形容詞 + er'),
+ g('An elephant is ___ than a dog.',['big','biger','bigger'],'bigger','大象比狗大。','big → bigger（重複 g 再加 er）'),
+ g('My cat is ___ than my dog.',['small','smaller','more small'],'smaller','我的貓比我的狗小。','短的形容詞加 er'),
+ g('Grandpa is ___ than Dad.',['old','older','oldest'],'older','爺爺比爸爸老。',''),
+ g('I ___ at home yesterday.',['am','was','were'],'was','我昨天在家。','I 的過去式用 was'),
+ g('They ___ at school last Monday.',['was','were','are'],'were','他們上週一在學校。','they 的過去式用 were'),
+ g('My sister is ___ than my brother.',['happy','happyer','happier'],'happier','我姊姊比我哥哥快樂。','y 結尾：去 y 加 ier',2),
+ g('Today is ___ than yesterday.',['hot','hoter','hotter'],'hotter','今天比昨天熱。','hot → hotter',2),
+ g('___ you at the park last Sunday?',['Was','Were','Did'],'Were','你上星期天在公園嗎？','you 的過去式用 were',2),
+ g('She ___ not tired last night.',['were','was','is'],'was','她昨晚不累。','she 的過去式用 was',2),
+ g('The red pencil is ___ than the blue pencil.',['long','longer','more long'],'longer','紅鉛筆比藍鉛筆長。','',2),
+ g('Was your mum a teacher? Yes, she ___.',['was','were','is'],'was','你媽媽以前是老師嗎？是的。','用 was 問就用 was 答',2)]},
+{id:'gf1',name:'U1 現在式 be',icon:'🧒',bank:[
+ g('My name ___ Emma.',['am','is','are'],'is','我的名字是 Emma。','my name = it，用 is'),
+ g('We ___ in Class 3B.',['am','is','are'],'are','我們在三年 B 班。',''),
+ g('He ___ my best friend.',['am','is','are'],'is','他是我最好的朋友。',''),
+ g('I ___ not hungry.',['am','is','are'],'am','我不餓。',''),
+ g('They ___ not at school today.',['isn\'t','aren\'t','am not'],'aren\'t','他們今天不在學校。','they are not = they aren\'t'),
+ g('She ___ eight years old.',['isn\'t','aren\'t','am not'],'isn\'t','她不是八歲。','she is not = she isn\'t'),
+ g('___ your friends kind?',['Is','Are','Am'],'Are','你的朋友們親切嗎？','friends 是複數',2),
+ g('Is Tom your brother? No, he ___.',['isn\'t','aren\'t','is'],'isn\'t','Tom 是你哥哥嗎？不是。','No 的簡答用否定',2),
+ g('Are you nine? Yes, I ___.',['am','is','are'],'am','你九歲嗎？是的。','回答時用 I am',2),
+ g('Ben and Sam ___ twins.',['is','are','am'],'are','Ben 和 Sam 是雙胞胎。','兩個人用 are',2),
+ g('___ it a cat or a dog?',['Is','Are','Am'],'Is','它是貓還是狗？','',2),
+ g('My shoes ___ new.',['is','are','am'],'are','我的鞋子是新的。','shoes 是複數',2)]},
+{id:'gf2',name:'U2 like + -ing',icon:'🎨',bank:[
+ g('I like ___.',['swim','swimming','swims'],'swimming','我喜歡游泳。','like 後面的動詞加 ing'),
+ g('She likes ___ books.',['read','reading','reads'],'reading','她喜歡看書。',''),
+ g('We like ___ football.',['play','playing','plays'],'playing','我們喜歡踢足球。',''),
+ g('He ___ like dancing.',['don\'t','doesn\'t','isn\'t'],'doesn\'t','他不喜歡跳舞。','he 的否定用 doesn\'t'),
+ g('Tom ___ riding his bike.',['like','likes','liking'],'likes','Tom 喜歡騎腳踏車。','Tom = he，like 加 s'),
+ g('They ___ like cooking.',['don\'t','doesn\'t','aren\'t'],'don\'t','他們不喜歡煮飯。',''),
+ g('My dad likes ___.',['runing','running','runs'],'running','我爸爸喜歡跑步。','run → running（重複 n）',2),
+ g('Do you like ___ pictures?',['draw','drawing','draws'],'drawing','你喜歡畫畫嗎？','',2),
+ g('Does she like skating? Yes, she ___.',['do','does','likes'],'does','她喜歡溜冰嗎？是的。','Does 問就用 does 答',2),
+ g('I love ___ with my friends.',['danceing','dancing','dance'],'dancing','我很愛和朋友跳舞。','dance → dancing（去 e 加 ing）',2),
+ g('___ your brother like singing?',['Do','Does','Is'],'Does','你哥哥喜歡唱歌嗎？','',2),
+ g('We don\'t like ___ TV.',['watch','watching','watches'],'watching','我們不喜歡看電視。','',2)]},
+{id:'gf3',name:'U3 can・所有格',icon:'🎒',bank:[
+ g('I can ___ a horse.',['ride','rides','riding'],'ride','我會騎馬。','can 後面用原形'),
+ g('Penguins can\'t ___.',['fly','flies','flying'],'fly','企鵝不會飛。',''),
+ g('___ I use your pencil, please?',['Can','Am','Do'],'Can','我可以用你的鉛筆嗎？','請求許可用 Can I…?'),
+ g('This is my sister. ___ name is Lily.',['His','Her','Its'],'Her','這是我妹妹，她的名字是 Lily。','女生的 → her'),
+ g('That is Mr. Lee. ___ car is red.',['His','Her','Their'],'His','那是李先生，他的車是紅色的。','男生的 → his'),
+ g('We love ___ teacher.',['our','we','us'],'our','我們愛我們的老師。','我們的 → our'),
+ g('The dog is eating ___ dinner.',['it\'s','its','his'],'its','狗在吃牠的晚餐。','牠的 → its（沒有撇號）',2),
+ g('The children are playing with ___ toys.',['they','their','there'],'their','孩子們在玩他們的玩具。','他們的 → their',2),
+ g('Can you swim? No, I ___.',['can','can\'t','don\'t'],'can\'t','你會游泳嗎？不會。','',2),
+ g('Can he ___ the guitar?',['plays','play','playing'],'play','他會彈吉他嗎？','',2),
+ g('Is this ___ bag, Anna?',['you','your','yours'],'your','Anna，這是你的書包嗎？','你的 → your',2),
+ g('___ we go to the park, Mum?',['Can','Are','Do'],'Can','媽，我們可以去公園嗎？','',2)]},
+{id:'gf4',name:'U4 現在進行式（1）',icon:'🏖️',bank:[
+ g('I am ___ a sandcastle.',['make','making','makes'],'making','我正在做沙堡。','be 動詞 + V-ing'),
+ g('The boys ___ playing in the sea.',['is','are','am'],'are','男孩們正在海裡玩。',''),
+ g('Mum is ___ a book.',['read','reading','reads'],'reading','媽媽正在看書。',''),
+ g('She ___ swimming now.',['isn\'t','aren\'t','don\'t'],'isn\'t','她現在沒有在游泳。','is not = isn\'t'),
+ g('We are ___ ice cream.',['eat','eating','eats'],'eating','我們正在吃冰淇淋。',''),
+ g('He is ___ on the beach.',['sit','siting','sitting'],'sitting','他正坐在沙灘上。','sit → sitting（重複 t）',2),
+ g('The dog is ___ after the ball.',['runing','running','run'],'running','狗正在追球。','',2),
+ g('They ___ not sleeping.',['is','are','am'],'are','他們沒有在睡覺。','',2),
+ g('Dad is ___ a photo.',['takeing','taking','takes'],'taking','爸爸正在拍照。','take → taking（去 e）',2),
+ g('I ___ not wearing my hat.',['am','is','are'],'am','我沒有戴帽子。','',2),
+ g('Look! The birds are ___.',['fly','flying','flies'],'flying','看！鳥兒正在飛。','',2),
+ g('My sister is ___ in the water.',['swiming','swimming','swim'],'swimming','我妹妹正在水裡游泳。','swim → swimming',2)]},
+{id:'gf5',name:'U5 現在進行式（2）',icon:'🦒',bank:[
+ g('___ the monkey eating a banana?',['Is','Are','Does'],'Is','猴子正在吃香蕉嗎？','問句把 be 動詞放前面'),
+ g('Are the lions sleeping? Yes, they ___.',['are','is','do'],'are','獅子在睡覺嗎？是的。',''),
+ g('Is the zebra running? No, it ___.',['isn\'t','aren\'t','doesn\'t'],'isn\'t','斑馬在跑嗎？沒有。',''),
+ g('What ___ you doing?',['is','are','do'],'are','你正在做什麼？',''),
+ g('What is she ___?',['eat','eating','eats'],'eating','她正在吃什麼？',''),
+ g('___ are the children looking at?',['What','Where','Who'],'What','孩子們正在看什麼？','',2),
+ g('Where is the penguin ___?',['go','going','goes'],'going','企鵝要去哪裡？','',2),
+ g('Are you watching the elephants? Yes, we ___.',['are','is','am'],'are','你們在看大象嗎？是的。','you（你們）→ we are',2),
+ g('Is Grandma feeding the ducks? Yes, she ___.',['is','does','are'],'is','奶奶在餵鴨子嗎？是的。','',2),
+ g('Who ___ taking photos?',['are','is','do'],'is','誰正在拍照？','who 當主詞用 is',2),
+ g('___ the giraffes drinking water?',['Is','Are','Do'],'Are','長頸鹿正在喝水嗎？','',2),
+ g('What is the keeper ___?',['doing','do','does'],'doing','管理員正在做什麼？','',2)]},
+{id:'gf6',name:'U6 現在簡單式・have',icon:'⏰',bank:[
+ g('I ___ up at seven o\'clock.',['get','gets','getting'],'get','我七點起床。','I 後面用原形'),
+ g('She ___ breakfast at home.',['have','has','haves'],'has','她在家吃早餐。','she 用 has'),
+ g('We ___ English on Tuesdays.',['have','has','having'],'have','我們星期二有英文課。',''),
+ g('He ___ to school by bus.',['go','goes','going'],'goes','他搭公車上學。',''),
+ g('My dad ___ a big car.',['have','has','haves'],'has','我爸爸有一台大車。',''),
+ g('They ___ have lunch at school.',['don\'t','doesn\'t','aren\'t'],'don\'t','他們不在學校吃午餐。',''),
+ g('Ben ___ his teeth every night.',['brush','brushs','brushes'],'brushes','Ben 每天晚上刷牙。','sh 結尾加 es',2),
+ g('___ you have a pet?',['Do','Does','Are'],'Do','你有養寵物嗎？','',2),
+ g('Does she have a sister? No, she ___.',['don\'t','doesn\'t','isn\'t'],'doesn\'t','她有姊妹嗎？沒有。','',2),
+ g('My mum ___ work on Sundays.',['don\'t','doesn\'t','isn\'t'],'doesn\'t','我媽媽星期天不上班。','',2),
+ g('He ___ TV after dinner.',['watch','watchs','watches'],'watches','他晚餐後看電視。','ch 結尾加 es',2),
+ g('Does your brother ___ a computer?',['has','have','having'],'have','你哥哥有電腦嗎？','Does 後面用原形 have',2)]},
+{id:'gf7',name:'U7 頻率副詞',icon:'📅',bank:[
+ g('I ___ eat breakfast. I eat it every day.',['always','never','sometimes'],'always','我總是吃早餐，每天都吃。','每天 → always'),
+ g('She ___ eats fish. She doesn\'t like it.',['always','usually','never'],'never','她從不吃魚，她不喜歡。',''),
+ g('We play tennis ___ Saturdays.',['in','on','at'],'on','我們星期六打網球。','星期幾前面用 on'),
+ g('I read books ___ the evening.',['on','at','in'],'in','我晚上看書。','in the morning / afternoon / evening'),
+ g('He goes swimming ___ the weekend.',['in','on','at'],'at','他週末去游泳。','at the weekend'),
+ g('They ___ go to the park. Not every day, but often.',['never','usually','always'],'usually','他們通常去公園。',''),
+ g('Tom is ___ late for school.',['never','nevers','is never'],'never','Tom 上學從不遲到。','頻率副詞放在 be 動詞後面',2),
+ g('My dog ___ sleeps on my bed.',['sometimes','sometime','some'],'sometimes','我的狗有時候睡在我床上。','',2),
+ g('I ___ watch TV in the morning.',['don\'t never','never','not never'],'never','我早上從不看電視。','never 本身就是否定',2),
+ g('We have music ___ Mondays and Fridays.',['in','at','on'],'on','我們星期一和星期五有音樂課。','',2),
+ g('She always ___ her homework after school.',['do','does','doing'],'does','她總是放學後寫功課。','she + does',2),
+ g('Sam is ___ happy on his birthday.',['always','never','sometimes'],'always','Sam 生日時總是很開心。','',2)]},
+{id:'gf8',name:'U8 可數不可數・would like',icon:'🛒',bank:[
+ g('I would like ___ apple, please.',['a','an','some'],'an','我想要一顆蘋果。','apple 是母音開頭'),
+ g('Can I have ___ milk, please?',['a','an','some'],'some','可以給我一些牛奶嗎？','milk 不可數，用 some'),
+ g('There aren\'t ___ bananas.',['some','any','a'],'any','沒有任何香蕉。','否定句用 any'),
+ g('___ you like some cake?',['Would','Do','Are'],'Would','你想要一些蛋糕嗎？','禮貌地問「想要嗎」用 Would you like'),
+ g('I\'d like ___ orange juice.',['a','some','many'],'some','我想要一些柳橙汁。','juice 不可數'),
+ g('We need two ___ of bread.',['loaf','loaves','loafs'],'loaves','我們需要兩條麵包。','loaf → loaves',2),
+ g('Are there ___ eggs in the fridge?',['some','any','a'],'any','冰箱裡有蛋嗎？','問句用 any',2),
+ g('Would you like a sandwich? Yes, ___.',['please','I like','I would'],'please','你想要三明治嗎？好，麻煩你。','',2),
+ g('She would like ___ water.',['a','an','some'],'some','她想要一些水。','water 不可數',2),
+ g('There is ___ rice on the plate.',['a','some','many'],'some','盤子上有一些飯。','rice 不可數',2),
+ g('I\'d like three ___, please.',['tomato','tomatos','tomatoes'],'tomatoes','我想要三顆番茄。','tomato → tomatoes',2),
+ g('Would he like ___ ice cream?',['a','an','any'],'an','他想要一支冰淇淋嗎？','',2)]},
+{id:'gf9',name:'U9 比較級・最高級',icon:'🏆',bank:[
+ g('A giraffe is ___ than a horse.',['tall','taller','tallest'],'taller','長頸鹿比馬高。',''),
+ g('The whale is the ___ animal in the sea.',['big','bigger','biggest'],'biggest','鯨魚是海裡最大的動物。','最高級：the + est'),
+ g('Ann is the ___ girl in our class.',['tall','taller','tallest'],'tallest','Ann 是我們班最高的女生。',''),
+ g('My bag is ___ than your bag.',['heavy','heavier','heaviest'],'heavier','我的書包比你的重。','y → ier'),
+ g('This is the ___ day of the year!',['happy','happier','happiest'],'happiest','這是一年中最快樂的一天！','',2),
+ g('My test was ___ than your test.',['good','better','best'],'better','我的考試比你的好。','good → better → best（不規則）',2),
+ g('This is the ___ book in the library.',['good','better','best'],'best','這是圖書館裡最好的書。','',2),
+ g('Today is ___ than yesterday. It\'s raining.',['bad','worse','worst'],'worse','今天比昨天糟，在下雨。','bad → worse → worst',2),
+ g('A cheetah is the ___ animal.',['fast','faster','fastest'],'fastest','獵豹是最快的動物。','',2),
+ g('Is your brother ___ than you?',['old','older','oldest'],'older','你哥哥比你大嗎？','',2),
+ g('The mouse is the ___ animal here.',['small','smaller','smallest'],'smallest','老鼠是這裡最小的動物。','',2),
+ g('Summer is ___ than winter.',['hot','hotter','hottest'],'hotter','夏天比冬天熱。','',2)]},
+{id:'gf10',name:'U10 must・祈使句',icon:'🚦',bank:[
+ g('You ___ wear a helmet on your bike.',['must','mustn\'t','can\'t'],'must','騎腳踏車一定要戴安全帽。','一定要 → must'),
+ g('You ___ run in the classroom.',['must','mustn\'t','can'],'mustn\'t','教室裡不可以跑。','不可以 → mustn\'t'),
+ g('___ your hands before dinner.',['Wash','Washing','Washes'],'Wash','晚餐前要洗手。','祈使句用原形開頭'),
+ g('___ shout in the library!',['Don\'t','Not','No'],'Don\'t','在圖書館不要大叫！','否定祈使句：Don\'t + 原形'),
+ g('We must ___ the rules.',['follow','follows','following'],'follow','我們一定要遵守規則。','must 後面用原形'),
+ g('___ down, please.',['Sit','Sits','Sitting'],'Sit','請坐下。','',2),
+ g('You mustn\'t ___ the animals at the zoo.',['feed','feeds','feeding'],'feed','在動物園不可以餵動物。','',2),
+ g('___ touch it! It\'s hot!',['Don\'t','Mustn\'t','Not'],'Don\'t','不要碰！很燙！','',2),
+ g('He ___ go to bed early. He has a test tomorrow.',['must','mustn\'t','doesn\'t'],'must','他一定要早點睡，明天要考試。','',2),
+ g('Please ___ the door.',['close','closes','closing'],'close','請關門。','',2),
+ g('You ___ eat in class. It\'s not OK.',['must','mustn\'t','can'],'mustn\'t','上課不可以吃東西。','',2),
+ g('Students must ___ their homework.',['do','does','doing'],'do','學生一定要寫功課。','',2)]},
+{id:'gf11',name:'U11 there was/were',icon:'🏰',bank:[
+ g('There ___ a castle on the hill long ago.',['was','were','is'],'was','很久以前山丘上有一座城堡。','單數用 there was'),
+ g('There ___ many trees in the park.',['was','were','is'],'were','以前公園裡有很多樹。','複數用 there were'),
+ g('There ___ any cars one hundred years ago.',['wasn\'t','weren\'t','isn\'t'],'weren\'t','一百年前沒有汽車。','複數否定 weren\'t'),
+ g('I went to the zoo ___.',['yesterday','tomorrow','next week'],'yesterday','我昨天去了動物園。','過去時間'),
+ g('There ___ a TV in the old house.',['wasn\'t','weren\'t','aren\'t'],'wasn\'t','那間老房子以前沒有電視。',''),
+ g('___ there a shop here last year?',['Was','Were','Is'],'Was','去年這裡有一家店嗎？','',2),
+ g('Were there any people? Yes, there ___.',['was','were','are'],'were','有人嗎？有。','',2),
+ g('There was a party ___ Saturday.',['last','ago','next'],'last','上星期六有一場派對。','last + 時間',2),
+ g('We visited Grandma two days ___.',['last','ago','before'],'ago','我們兩天前去看了奶奶。','數字 + 時間 + ago',2),
+ g('There ___ three books on my desk this morning.',['was','were','are'],'were','今天早上我桌上有三本書。','',2),
+ g('Was there a dog in the garden? No, there ___.',['wasn\'t','weren\'t','isn\'t'],'wasn\'t','花園裡有狗嗎？沒有。','',2),
+ g('___ there any bikes in the street?',['Was','Were','Did'],'Were','街上有腳踏車嗎？','',2)]},
+{id:'gf12',name:'U12 過去式 had・was・連接詞',icon:'📸',bank:[
+ g('I ___ a red bike when I was six.',['have','had','has'],'had','我六歲時有一台紅色腳踏車。','have / has 的過去式是 had'),
+ g('My grandpa ___ a farmer.',['was','were','is'],'was','我爺爺以前是農夫。',''),
+ g('We ___ very happy at the party.',['was','were','are'],'were','我們在派對上很開心。',''),
+ g('She ___ have a phone then.',['didn\'t','wasn\'t','doesn\'t'],'didn\'t','她那時候沒有手機。','過去否定 didn\'t + 原形'),
+ g('I like apples ___ I don\'t like pears.',['and','but','because'],'but','我喜歡蘋果，但不喜歡梨子。','意思相反用 but'),
+ g('He has a cat ___ a dog.',['and','but','or'],'and','他有一隻貓和一隻狗。',''),
+ g('Did they ___ a big house?',['had','have','has'],'have','他們以前有大房子嗎？','Did 後面用原形',2),
+ g('Mum was tired, ___ she went to bed early.',['so','but','because'],'so','媽媽很累，所以她早早上床睡覺。','結果 → so',2),
+ g('I stayed home ___ I was sick.',['so','but','because'],'because','我待在家，因為我生病了。','原因 → because',2),
+ g('My parents ___ students in 2010.',['was','were','are'],'were','我爸媽 2010 年時是學生。','',2),
+ g('Dad ___ a lot of toys when he was young.',['has','had','have'],'had','爸爸小時候有很多玩具。','',2),
+ g('Was the film good? Yes, it ___.',['was','were','did'],'was','電影好看嗎？好看。','',2)]},
+{id:'gf13',name:'U13 過去式 -ed・ago',icon:'🎉',bank:[
+ g('We ___ games at the party.',['play','played','playing'],'played','我們在派對上玩了遊戲。','規則動詞加 ed'),
+ g('She ___ the cake last night.',['bake','baked','bakeed'],'baked','她昨晚烤了蛋糕。','e 結尾只加 d'),
+ g('I ___ my grandma yesterday.',['visit','visited','visitted'],'visited','我昨天去看奶奶。',''),
+ g('The baby ___ all night.',['cryed','cried','cries'],'cried','嬰兒整晚都在哭。','子音 + y：去 y 加 ied'),
+ g('The bus ___ at the station.',['stoped','stopped','stops'],'stopped','公車在車站停下。','stop → stopped（重複 p）'),
+ g('We had the party three days ___.',['ago','last','before'],'ago','我們三天前辦了派對。',''),
+ g('They ___ to music all afternoon.',['listen','listened','listenned'],'listened','他們整個下午都在聽音樂。','',2),
+ g('He ___ the door and went out.',['open','opened','openned'],'opened','他打開門走出去。','',2),
+ g('I ___ my homework an hour ago.',['finish','finished','finishing'],'finished','我一小時前寫完功課。','',2),
+ g('My friends ___ me with the cake.',['help','helped','helpped'],'helped','朋友們幫我做蛋糕。','',2),
+ g('We ___ in the park last weekend.',['walk','walked','walkd'],'walked','我們上週末在公園散步。','',2),
+ g('She ___ the heavy box to her room.',['carryed','carried','carries'],'carried','她把重重的箱子搬到房間。','carry → carried',2)]},
+{id:'gf14',name:'U14 過去式問句・不規則',icon:'🏫',bank:[
+ g('___ you go to school yesterday?',['Do','Did','Were'],'Did','你昨天有去上學嗎？','過去問句用 Did'),
+ g('Where did you ___ last summer?',['go','went','goes'],'go','你去年夏天去了哪裡？','did 後面用原形'),
+ g('I ___ a new book on Monday.',['buy','bought','buyed'],'bought','我星期一買了一本新書。','buy → bought'),
+ g('We ___ to the museum last week.',['go','goed','went'],'went','我們上週去了博物館。','go → went'),
+ g('She ___ a funny story.',['write','wrote','writed'],'wrote','她寫了一個好笑的故事。','write → wrote'),
+ g('___ did you see at the zoo? I saw a tiger.',['What','Where','When'],'What','你在動物園看到什麼？','問「什麼」用 What'),
+ g('___ did you get home? At six o\'clock.',['What','Where','When'],'When','你什麼時候到家？六點。','問時間用 When',2),
+ g('Did he eat lunch? Yes, he ___.',['did','does','ate'],'did','他吃午餐了嗎？吃了。','',2),
+ g('Tom ___ his ruler at school.',['forget','forgot','forgeted'],'forgot','Tom 把尺忘在學校了。','forget → forgot',2),
+ g('What did you ___ for breakfast?',['have','had','has'],'have','你早餐吃了什麼？','',2),
+ g('I ___ my friend in the park.',['meet','met','meeted'],'met','我在公園遇到朋友。','meet → met',2),
+ g('Did they ___ the bus to school?',['take','took','takes'],'take','他們搭公車上學嗎？','',2)]},
+{id:'gf15',name:'U15 be going to',icon:'✈️',bank:[
+ g('I am going ___ visit my uncle.',['to','for','at'],'to','我要去拜訪我叔叔。','be going to + 原形'),
+ g('We ___ going to swim tomorrow.',['is','are','am'],'are','我們明天要去游泳。',''),
+ g('She is going to ___ a postcard.',['send','sends','sending'],'send','她要寄一張明信片。',''),
+ g('He ___ going to play football next Sunday.',['is','are','am'],'is','他下星期天要去踢足球。',''),
+ g('They aren\'t going to ___ by plane.',['travel','travels','travelling'],'travel','他們不打算搭飛機去。',''),
+ g('We are going to the beach ___ week.',['last','next','ago'],'next','我們下週要去海邊。','未來 → next',2),
+ g('___ you going to take photos?',['Are','Do','Will'],'Are','你會拍照嗎？','',2),
+ g('Is she going to buy a hat? Yes, she ___.',['is','does','will'],'is','她要買帽子嗎？是的。','',2),
+ g('What are you going to ___ this summer?',['do','does','doing'],'do','你這個夏天要做什麼？','',2),
+ g('I\'m going to stay at a hotel ___.',['yesterday','tomorrow','last night'],'tomorrow','我明天要住飯店。','',2),
+ g('Dad ___ going to drive. He\'s tired.',['isn\'t','aren\'t','doesn\'t'],'isn\'t','爸爸不打算開車，他累了。','',2),
+ g('Where are they going to ___?',['stay','stays','stayed'],'stay','他們打算住在哪裡？','',2)]}
+];
+
 // ---------- 地圖 ----------
 const WORLD={
  math:{name:'數字王國',icon:'🏰',zones:[{name:'🏰 翰林版 三年級上學期',desc:'每個單元都有 Lv1 基礎、Lv2 進階、Lv3 應用挑戰',nodes:MATH},{name:'🏆 卓越盃素養挑戰',desc:'仿卓越盃題型：題目比較長，要先讀懂情境再算。Lv1、Lv2 是選擇題，Lv3 是進階填答題',nodes:COMP}],boss:{need:15,name:'數學大魔王',icon:'👹'}},
  eng:{name:'英語森林',icon:'🌳',zones:[
   {name:'🏡 單字村 Vocabulary',desc:'Lv1 看圖選字 → Lv2 聽音、字義 → Lv3 拼字',nodes:VOC.map(v=>({id:v.id,name:v.name,icon:v.icon,kind:'voc',gen:lv=>vocabGen(v.list,lv)}))},
+  {name:'📗 Grammar Friends 3',desc:'照課本單元排：Starter～Unit 15，Lv3 有排句子',nodes:GF3.map(x=>({id:x.id,name:x.name,icon:x.icon,kind:'gram',gen:lv=>gramGen(x.bank,lv)}))},
   {name:'🏞️ 文法谷 Grammar',desc:'Lv1 基礎選擇 → Lv2 進階選擇 → Lv3 排句子',nodes:GRAM.filter(x=>!x.tense).map(x=>({id:x.id,name:x.name,icon:x.icon,kind:'gram',gen:lv=>gramGen(x.bank,lv)}))},
   {name:'🗼 時態塔 Tenses',desc:'看時間線索（now、yesterday、tomorrow）選時態',nodes:GRAM.filter(x=>x.tense).map(x=>({id:x.id,name:x.name,icon:x.icon,kind:'gram',gen:lv=>gramGen(x.bank,lv)}))}],
   boss:{need:25,name:'英文大魔王',icon:'🐲'}}
@@ -1272,7 +1486,7 @@ function enforce(){if(!S)return;const st=limState();if(!st)return;
 function startRest(){const L=lim(),T=tl();T.restUntil=now()+L.rest*60000;T.sess=0;T.warned=false;PEND_REST=false;save();showLock('rest');}
 function timeChipText(){if(!S)return '';const L=lim();if(!L.on)return '⏱ 不限時';const T=tl();if(T.unlim)return '⏱ 今天不限時';const s=Math.max(0,Math.ceil((L.session*60-T.sess)/60));const d=L.daily>0?Math.max(0,Math.ceil(((L.daily+T.bonus)*60-T.used)/60)):null;return `⏱ 再 ${s} 分鐘休息${d!==null?`・今天剩 ${d} 分`:''}`;}
 const mmss=ms=>{const t=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;};
-function showLock(k){let el=$('#lock');if(!el){el=document.createElement('div');el.id='lock';el.className='lock';document.body.appendChild(el);}closeModal();const f=$('#fb');if(f)f.remove();LOCKKIND=k;renderLock();clearInterval(LOCKT);LOCKT=setInterval(renderLock,1000);}
+function showLock(k){let el=$('#lock');if(!el){el=document.createElement('div');el.id='lock';el.className='restlock';document.body.appendChild(el);}closeModal();const f=$('#fb');if(f)f.remove();LOCKKIND=k;renderLock();clearInterval(LOCKT);LOCKT=setInterval(renderLock,1000);}
 function hideLock(){clearInterval(LOCKT);LOCKT=null;const el=$('#lock');if(el)el.remove();}
 function renderLock(){const el=$('#lock');if(!el)return;if(!S){hideLock();return;}const st=limState();
  if(!st||st.k==='sess'){const wasRest=LOCKKIND==='rest';hideLock();if(wasRest){const T=tl();T.sess=0;T.warned=false;T.last=now();save();toast('🎉 休息結束，可以繼續練功囉！');}home();return;}
